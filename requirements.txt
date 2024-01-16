@@ -13,3 +13,4 @@ mutagen
 pydantic_yaml[ruamel, pyyaml]==0.8.1
 CTkListbox
 pillow
+faster-whisper
