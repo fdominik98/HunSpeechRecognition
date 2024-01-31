@@ -3,13 +3,16 @@ import os
 from threading import Lock
 from models.result_row import ResultRow
 from queue import Queue
+from models.task import Task
+from models.segment import Segment
+from typing import Optional
 
 class ResultManager():
     def __init__(self, project_folder) -> None:
         self.__file_path = f'{project_folder}/result.csv'
         self.__lock = Lock()
         self.__result_list : list[ResultRow] = []
-        self.widget_queue = Queue()
+        self.widget_queue : Queue = Queue()
 
     def __load(self):
         # Load CSV into a list of dictionaries
@@ -18,15 +21,25 @@ class ResultManager():
             [self.__result_list.append(ResultRow.from_dict(row)) for row in reader]
             
             
-    def save_results(self, results : list[ResultRow]):
-        if len(results) == 0:
-            return
+    def save_results(self, segments : list[Segment], task : Task) -> list[ResultRow]:
+        if len(segments) == 0:
+            return []
+        
+        new_results : list[ResultRow] = []
+        for segment in segments:
+            if len(segment.text) == 0:
+                continue
+            result = ResultRow(self.size(), task.segment_number, task.trim_file_path, (segment.start, segment.end),
+                    (task.trim_timestamp[0] + segment.start, task.trim_timestamp[0] + segment.end),
+                        segment.text.strip(), self.get_sentence_pos(segment.text.strip()))
+            self.__result_list.append(result)
+            new_results.append(result)
         
         with self.__lock:
-            self.__result_list += results
             with open(self.__file_path, 'a', newline='', encoding='utf-8') as file:
-                writer = csv.DictWriter(file, fieldnames=results[0].to_dict().keys())
-                writer.writerows([result.to_dict() for result in results])
+                writer = csv.DictWriter(file, fieldnames=new_results[0].to_dict().keys())
+                writer.writerows([result.to_dict() for result in new_results])
+        return new_results
 
 
     def load(self):
@@ -35,16 +48,57 @@ class ResultManager():
                 self.__load()
                 return    
             # If the file does not exist, create an empty file with headers
-            headers = ['chunk_id', 'chunk_file', 'relative_timestamp', 'absolute_timestamp', 'sentence']  # Define your headers here
+            headers = ['id', 'chunk_id', 'chunk_file', 'relative_timestamp', 'absolute_timestamp', 'sentence', 'sentence_pos']  # Define your headers here
             with open(self.__file_path, mode='w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=headers)
                 writer.writeheader()
 
-    def get(self) -> list[ResultRow]:
+    def get_all(self) -> list[ResultRow]:
         with self.__lock:
             return self.__result_list
+        
+    def get(self, index) -> ResultRow:
+        with self.__lock:
+            return self.__result_list[index]
 
+    def next_segment_num(self):
+        with self.__lock:
+            if len(self.__result_list) == 0:
+                return 0
+            return self.__result_list[-1].chunk_id + 1
+        
     def size(self):
-        if len(self.get()) == 0:
-            return 0
-        return self.get()[-1].chunk_id + 1
+        with self.__lock:
+            return len(self.__result_list)
+        
+
+    def get_sentence_pos(self, text : str) -> tuple[int, int]:
+        with self.__lock:
+            start_pos = 0
+            if not len(self.__result_list) == 0 :
+                start_pos = self.__result_list[-1].sentence_pos[1] + 2
+            end_pos = start_pos + len(text) - 1
+            return (start_pos, end_pos)
+
+
+    def find_by_text_pos(self, index : str) -> Optional[ResultRow]:
+        low = 0
+        high = self.size() - 1
+        y_position = int(index.split('.')[0])
+        x_position = int(index.split('.')[1])
+
+        if self.size() >= y_position:
+            return self.get(y_position - 1)
+        print(f'Warning: No result found at the given index! clicked position is {y_position}, but result size is {self.size()}')
+        return None
+
+        while low <= high:
+            mid = (low + high) // 2
+            if self.get(mid).sentence_pos[0] <= x_position <= self.get(mid).sentence_pos[1]:
+                return self.get(mid)
+            elif x_position < self.get(mid).sentence_pos[0]:
+                high = mid - 1
+            else:
+                low = mid + 1
+        print('Warning: No result found at the given index!')
+        return None

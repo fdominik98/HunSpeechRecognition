@@ -1,12 +1,24 @@
+from models.process_state import ProcessState
+
 class Task():
-    def __init__(self, segment_number : int, main_file_path : str, split_file_path : str, split_timestamp : tuple[float, float], 
-                trim_file_path : str, trim_timestamp : tuple[float, float] = '') -> None:
-        self.segment_number = segment_number
-        self.main_file_path = main_file_path
-        self.split_file_path = split_file_path
-        self.split_timestamp = split_timestamp
-        self.trim_file_path = trim_file_path
-        self.trim_timestamp = trim_timestamp
+    def __init__(self, process_state : ProcessState,
+                segment_number : int,
+                main_file_path : str,
+                split_timestamp : tuple[float, float], 
+                trim_timestamp : tuple[float, float],
+                trim_file_path : str,
+                split_file_path : str) -> None:
+        self.process_state : ProcessState = process_state
+        self.segment_number : int = segment_number
+        self.main_file_path : str = main_file_path
+        self.split_file_path : str = split_file_path
+        self.split_timestamp : tuple[float, float] = split_timestamp
+        self.trim_file_path : str = trim_file_path
+        self.trim_timestamp : tuple[float, float] = trim_timestamp
+
+    def set_process_state(self, process_state : ProcessState):
+        self.process_state = process_state
+        return self
 
     def set_main_file_path(self, path : str):
         self.main_file_path = path
@@ -16,7 +28,7 @@ class Task():
         self.split_file_path = path
         return self
     
-    def set_split_timestamp(self, timestamp : str):
+    def set_split_timestamp(self, timestamp : tuple[float, float]):
         self.split_timestamp = timestamp
         return self
     
@@ -24,7 +36,7 @@ class Task():
         self.trim_file_path = path
         return self
     
-    def set_trim_timestamp(self, timestamp : str):
+    def set_trim_timestamp(self, timestamp : tuple[float, float]):
         self.trim_timestamp = timestamp
         return self
     

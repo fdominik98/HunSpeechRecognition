@@ -5,7 +5,7 @@ class Settings(YamlModel):
     chunk_size : int = 29
     mp3_file : str = ''
     mp3_duration : float = 0
-    noise_treshold : int = -45
+    noise_treshold : int = -60
     silence_dur : float = 0.5
     project_folder : str = ''
 

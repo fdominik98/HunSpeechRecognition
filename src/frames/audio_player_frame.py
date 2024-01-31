@@ -9,6 +9,7 @@ from PIL import Image
 import os
 from models.audio_source import AudioSource
 from models.audio_file import AudioFile
+from typing import Optional
 
 class AudioPlayerFrame(CTkFrame):
     def __init__(self, parent : CTkFrame, row, column):
@@ -17,8 +18,8 @@ class AudioPlayerFrame(CTkFrame):
         pygame.mixer.init()
 
         self.is_playing : bool = False
-        self.start_time : float = None
-        self.mp3_file : str = None
+        self.start_time : Optional[float] = None
+        self.mp3_file : Optional[str] = None
         self.duration : int = 0
 
         image_base_path = f'{os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))}/images'
@@ -100,9 +101,11 @@ class AudioPlayerFrame(CTkFrame):
 
     def previous(self):
         self.stop()
+        print('Not implemented!')
         pass
     def next(self):
         self.stop()
+        print('Not implemented!')
         pass
 
     def get_nav_slider_preview(self):
@@ -137,6 +140,7 @@ class AudioPlayerFrame(CTkFrame):
         self.is_playing = False
         self.navigation_slider.set(0)
         self.end_time_label.configure(text=to_timestamp_sec(0))
+        self.start_time_label.configure(text=to_timestamp_sec(0))
         pygame.mixer.music.unload()
         self.mp3_file = None
 
@@ -167,6 +171,8 @@ class AudioPlayerFrame(CTkFrame):
         self.end_time_label.configure(text=to_timestamp_sec(self.duration)) 
 
     def update_slider_position(self):
+        if not self.winfo_exists():
+            return
         if self.is_playing:
             elapsed_time = time.time() - self.start_time
             self.navigation_slider.set(elapsed_time / self.duration * 100)

@@ -1,12 +1,10 @@
-pydub
 ffmpeg-python
 accelerate
 wheel
 optimum
-tk-tools==0.16.0
-customtkinter==5.2.0
-screeninfo==0.8.1
-tkhtmlview==0.2.0
+tk-tools
+customtkinter
+screeninfo
 pyyaml
 pygame
 mutagen
@@ -14,3 +12,5 @@ pydantic_yaml[ruamel, pyyaml]==0.8.1
 CTkListbox
 pillow
 faster-whisper
+tkinter-tooltip
+torch

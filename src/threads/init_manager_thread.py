@@ -1,24 +1,26 @@
 from threads.speech_base_thread import SpeechBaseThread
 from models.settings import Settings
-from models.process_state import ProcessState
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager, AudioFileManager
 from managers.result_manager import ResultManager
+from managers.asset_tree_manager import AssetTreeManager
 
 class InitManagerThread(SpeechBaseThread): 
-    def __init__(self, settings : Settings, process_state : ProcessState, error_callback):
-        super().__init__('InitManagerThread', settings, process_state, error_callback)
+    def __init__(self, settings : Settings, error_callback):
+        super().__init__('InitManagerThread', settings, error_callback)
+        self.asset_tree_manager = AssetTreeManager(settings=settings)
         self.result_manager = ResultManager(project_folder=self.settings.project_folder)
-        self.split_audio_manager = SplitAudioFileManager(project_folder=self.settings.project_folder)
-        self.trimmed_audio_manager = TrimmedAudioFileManager(project_folder=self.settings.project_folder)
+        self.split_audio_manager = SplitAudioFileManager(self.asset_tree_manager)
+        self.trimmed_audio_manager = TrimmedAudioFileManager(self.asset_tree_manager)
         self.original_audio_manager = AudioFileManager(asset_folder=self.settings.project_folder)
 
     def do_run(self):
+        self.asset_tree_manager.load()
         self.result_manager.load()
         self.original_audio_manager.load()
         self.split_audio_manager.load()
         self.trimmed_audio_manager.load()
 
-        for result in self.result_manager.get():
+        for result in self.result_manager.get_all():
             self.result_manager.widget_queue.put(result)
         for audio_file in self.original_audio_manager.get():
             self.original_audio_manager.insert_widget_queue.put(audio_file)

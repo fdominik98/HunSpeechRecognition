@@ -1,6 +1,12 @@
 import os
 from customtkinter import CTkTextbox
 import hashlib
+from mutagen.mp3 import MP3
+from subprocess import PIPE, Popen
+
+def get_audio_duration(file_path):
+    audio = MP3(file_path)        
+    return float(audio.info.length) 
 
 def append_to_file_name(original_path, prefix):
     # Split the original path into directory and file name
@@ -76,6 +82,11 @@ def to_timestamp_1dec(seconds):
         return f"{hours}:{minutes:02d}:{remaining_seconds:04.1f}"
     else:
         return f"{minutes}:{remaining_seconds:04.1f}"
+    
+def run_ffmpeg_command(command):
+    process = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    output, error = process.communicate()
+    return output, error
 
 
 

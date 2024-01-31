@@ -8,7 +8,7 @@ class SettingsManager():
        self.__lock = Lock()
        self.__load_settings()
 
-    def __load_settings(self) -> Settings:
+    def __load_settings(self):
         with self.__lock:
             if os.path.exists(self.__file_path):
                 self.__settings = Settings.parse_file(self.__file_path)

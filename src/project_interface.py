@@ -1,14 +1,14 @@
 from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, set_appearance_mode, set_default_color_theme
 import os
 from managers.settings_manager import SettingsManager
-from utils.general_utils import empty, get_text
-from utils.command_utils import get_audio_duration
+from utils.general_utils import empty, get_text, get_audio_duration
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from windows.main_window import MainWindow
 from shutil import copy
 from managers.audio_file_manager import AudioFileManager
 from models.audio_file import AudioFile
+from models.pipeline_process import PipelineProcess
 
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -51,7 +51,7 @@ class ProjectInterface(CTk):
         self.project_folder_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
         self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
         self.project_folder_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.project_folder_textbox.insert("0.0", 'C:/Users/freyd/Desktop/anya/PROBA')
+        self.project_folder_textbox.insert("0.0", 'C:\\Users\\freyd\\Desktop\\HunSpeechRecognition\\PROBA')
         self.project_folder_textbox.configure(state="disabled")
 
         self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
@@ -65,6 +65,9 @@ class ProjectInterface(CTk):
 
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
+
+        self.pipeline_process = PipelineProcess()
+        self.pipeline_process.start()
 
 
     def __center_pname_textbox(self):
@@ -148,16 +151,17 @@ class ProjectInterface(CTk):
 
     def __open_main_application(self, settings_manager : SettingsManager):
         self.withdraw()
-        self.main_app_window = MainWindow(settings_manager.get())        
+        self.main_app_window = MainWindow(settings_manager.get(), self.pipeline_process)        
         # When the main application is closed, end the program
         self.main_app_window.protocol("WM_DELETE_WINDOW", lambda settings_manager=settings_manager: self.on_closing(settings_manager))
 
 
     def on_closing(self, settings_manager : SettingsManager):
         settings_manager.save_settings()
+        self.main_app_window.withdraw()
+        self.deiconify()
         self.main_app_window.destroy_threads()
         self.main_app_window.destroy()
-        self.deiconify()
 
 
 if __name__ == "__main__":

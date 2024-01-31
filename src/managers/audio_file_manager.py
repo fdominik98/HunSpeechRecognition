@@ -7,46 +7,48 @@ from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, COMM
 from typing import Optional
 from queue import Queue
+from managers.asset_tree_manager import AssetTreeManager
 
 
 class AudioFileManager(ABC):
-    def __init__(self, asset_folder) -> None:
+    def __init__(self, asset_folder : str) -> None:        
         self.asset_folder = asset_folder
         self.__lock = Lock()
         self.__audio_file_list : list[AudioFile] = []
-        self.insert_widget_queue = Queue()
-        self.delete_widget_queue = Queue()
+        self.insert_widget_queue : Queue = Queue()
+        self.delete_widget_queue : Queue = Queue()
 
     def load(self):
         with self.__lock:
             if os.path.exists(self.asset_folder):
-                self.__load()
+                self._load()
                 return    
         os.makedirs(self.asset_folder)
 
+    def _load_file(self, file_path):
+        if os.path.isfile(file_path) and str(file_path).lower().endswith('.mp3'):
+            audio = MP3(file_path, ID3=ID3)
 
-    def __load(self):
+            serialized_data = None
+            # Extract the data from the comments
+            for tag in audio.tags.getall('COMM'):
+                if tag.desc == 'AudioInfo':
+                    serialized_data = tag.text[0]
+                    break
+            if serialized_data == None:
+                print('Warning: No data found in one of the segments!')
+                return
+            # Deserialize the data
+            data = json.loads(serialized_data)
+            self.__audio_file_list.append(AudioFile(data["segment_number"],
+                                            file_path,
+                                            tuple(data["relative_timestamp"]),
+                                            tuple(data["absolute_timestamp"])))
+
+    def _load(self):
         for entry in os.listdir(self.asset_folder):
             file_path = os.path.join(self.asset_folder, entry)
-            if os.path.isfile(file_path) and str(entry).lower().endswith('.mp3'):
-                audio = MP3(file_path, ID3=ID3)
-
-                serialized_data = None
-                # Extract the data from the comments
-                for tag in audio.tags.getall('COMM'):
-                    if tag.desc == 'AudioInfo':
-                        serialized_data = tag.text[0]
-                        break
-                if serialized_data == None:
-                    print('Warning: No data found in one of the segments!')
-                    return
-                # Deserialize the data
-                data = json.loads(serialized_data)
-                self.__audio_file_list.append(AudioFile(data["segment_number"],
-                                                file_path,
-                                                tuple(data["relative_timestamp"]),
-                                                tuple(data["absolute_timestamp"])))
-
+            self._load_file(file_path)
                 
     def save_audio_file(self, audio_file : AudioFile) -> bool:
         with self.__lock:
@@ -64,16 +66,25 @@ class AudioFileManager(ABC):
             audio.tags.add(COMM(encoding=3, lang='eng', desc='AudioInfo', text=data_to_store))
             audio.save()
             return True
+        
+    def __do_delete_audio_file(self, audio_file : AudioFile) -> Optional[int]:
+        found_object = next((obj for obj in self.__audio_file_list if obj.segment_number == audio_file.segment_number), None)
+        if found_object:
+            index = self.__audio_file_list.index(found_object)
+            self.__audio_file_list.remove(found_object)
+            os.remove(found_object.file_path)
+            return index
+        return None
 
     def delete_audio_file(self, audio_file : AudioFile) -> Optional[int]:
         with self.__lock:
-            found_object = next((obj for obj in self.__audio_file_list if obj.segment_number == audio_file.segment_number), None)
-            if found_object:
-                index = self.__audio_file_list.index(found_object)
-                self.__audio_file_list.remove(found_object)
-                os.remove(found_object.file_path)
-                return index
+            return self.__do_delete_audio_file(audio_file)
+
+    def delete_at_index(self, index : int) -> Optional[int]:
+        if index > self.size()-1:
             return None
+        with self.__lock:
+            return self.__do_delete_audio_file(self.__audio_file_list[index])
                     
     def get(self) -> list[AudioFile]:
         with self.__lock:
@@ -83,11 +94,26 @@ class AudioFileManager(ABC):
         with self.__lock:
             return len(self.__audio_file_list)
         
+    def delete_all(self):
+        for audio_file in self.get():
+            self.__do_delete_audio_file(audio_file)
+        
+
 
 class SplitAudioFileManager(AudioFileManager):
-    def __init__(self, project_folder) -> None:
-        super().__init__(f'{project_folder}/assets/split')
+    def __init__(self, asset_manager : AssetTreeManager) -> None:
+        super().__init__(asset_manager.split_folder)
+        self.asset_manager : AssetTreeManager = asset_manager
+
+    def _load(self):
+        for task in self.asset_manager.get():
+            self._load_file(task.split_file_path)
 
 class TrimmedAudioFileManager(AudioFileManager):
-    def __init__(self, project_folder) -> None:
-        super().__init__(f'{project_folder}/assets/trim')
+    def __init__(self, asset_manager : AssetTreeManager) -> None:
+        super().__init__(asset_manager.trim_folder)
+        self.asset_manager : AssetTreeManager = asset_manager
+
+    def _load(self):
+        for task in self.asset_manager.get():
+            self._load_file(task.trim_file_path)

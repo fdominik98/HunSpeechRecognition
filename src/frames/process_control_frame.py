@@ -6,11 +6,10 @@ from models.process_state import ProcessState
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
 
 class ProcessControlFrame(CTkFrame):
-    def __init__(self, parent, row, column, settings, result_manager,
-                 start_process_callback, cancel_process_callback, split_audio_manager, trimmed_audio_manager):
+    def __init__(self, parent, row, column, settings: Settings, result_manager : ResultManager,
+                 process_state_change_callbacks : list, split_audio_manager: SplitAudioFileManager, trimmed_audio_manager: TrimmedAudioFileManager):
         super().__init__(parent, height=70)
-        self.start_process_callback = start_process_callback
-        self.cancel_process_callback = cancel_process_callback
+        self.process_state_change_callbacks : list = process_state_change_callbacks
         self.settings : Settings = settings
         self.result_manager : ResultManager = result_manager
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
@@ -57,8 +56,7 @@ class ProcessControlFrame(CTkFrame):
         self.update_progress()
 
 
-    def switch_to_stop_mode(self):
-        self.process_state = ProcessState.STOPPED
+    def switch_to_stop_mode(self):        
         self.small_progressbar.grid_remove()
         self.small_progressbar.stop()
         self.progressbar.grid_remove()  
@@ -71,36 +69,46 @@ class ProcessControlFrame(CTkFrame):
     
 
     def __on_cancel_process_click(self):
-        self.cancel_process_callback()
+        self.process_state = ProcessState.STOPPED
+        self.__call_process_state_change_callbacks(True)       
         self.switch_to_stop_mode()
 
     def __on_start_splitting_click(self):
         self.process_state = ProcessState.SPLITTING
-        self.start_process_callback(self.process_state)        
+        self.__call_process_state_change_callbacks(True)       
         self.switch_to_process_mode()
 
     def __on_start_trimming_click(self):
         self.process_state = ProcessState.TRIMMING
-        self.start_process_callback(self.process_state)        
+        self.__call_process_state_change_callbacks(True)        
         self.switch_to_process_mode()
 
     def __on_start_generating_click(self):
         self.process_state = ProcessState.GENERATING
-        self.start_process_callback(self.process_state)        
+        self.__call_process_state_change_callbacks(True)       
         self.switch_to_process_mode()
 
+    def __call_process_state_change_callbacks(self, forced : bool):
+        for process_state_change_callback in self.process_state_change_callbacks:
+            process_state_change_callback(self.process_state, forced) 
 
     def update_progress(self):
+        if not self.winfo_exists():
+            return
         if self.process_state == ProcessState.SPLITTING:
             new_value = (self.split_audio_manager.size() + self.trimmed_audio_manager.size()) / self.settings.chunk_count()
         elif self.process_state == ProcessState.TRIMMING:
             new_value = self.trimmed_audio_manager.size() / self.settings.chunk_count()
         elif self.process_state == ProcessState.GENERATING:
-            new_value = self.result_manager.size() / self.settings.chunk_count()
+            new_value = self.result_manager.next_segment_num() / self.settings.chunk_count()
         else:
             new_value = 0
         self.progressbar.set(new_value)
-        self.progress_label.configure(text=f'{self.process_state.value} {round(new_value * 100)} %')        
+        self.progress_label.configure(text=f'{self.process_state.value} {round(new_value * 100)} %') 
+        if new_value >= 1.0:
+            self.process_state = ProcessState.STOPPED
+            self.__call_process_state_change_callbacks(False)
+            self.switch_to_stop_mode()
         self.after(1000, self.update_progress)
 
     def switch_to_process_mode(self):        
