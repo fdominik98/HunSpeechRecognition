@@ -5,6 +5,7 @@ from faster_whisper import WhisperModel
 from torch import cuda 
 from threads.pipeline_producer_thread import PipelineProducerThread
 from time import sleep
+from utils.general_utils import add_to_path
 
 class PipelineProcess(Process):
     def __init__(self) -> None:
@@ -20,10 +21,11 @@ class PipelineProcess(Process):
 
 def do_process_file(conn, input_queue : ProcessQueue, output_queue: ProcessQueue):
     set_cuda_environment('12.3')
-    model : WhisperModel = WhisperModel('medium', device='cuda')
+    num_producers = 3
+
+    model : WhisperModel = WhisperModel('medium', device='cpu', num_workers=num_producers)
     conn.send('init_finished')
 
-    num_producers = 3
     producers : list[PipelineProducerThread] = []
     for id in range(num_producers):
         producer = PipelineProducerThread(id, model, output_queue)
@@ -42,17 +44,13 @@ def do_process_file(conn, input_queue : ProcessQueue, output_queue: ProcessQueue
 
 
 def set_cuda_environment(cuda_version):
-    cuda_path = f"C:\\Program Files\\NVIDIA GPU Computing Toolkit\\CUDA\\v{cuda_version}"
-    bin_path = os.path.join(cuda_path, 'bin')
-    libnvvp_path = os.path.join(cuda_path, 'libnvvp')
-
-    # Set CUDA_HOME
+    cuda_path = f"C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v{cuda_version}"
     os.environ['CUDA_PATH'] = cuda_path
 
-    # Add CUDA bin and libnvvp to PATH
-    current_path = os.environ.get('Path', '')
-    new_path = f"{bin_path};{libnvvp_path};{current_path};C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\NVIDIA Corporation\\Nsight Compute 2023.2.2\\;C:\\Program Files\\NVIDIA Corporation\\NVIDIA NvDLISR"
-    os.environ['Path'] = new_path
+    add_to_path(f'{cuda_path}/bin')
+    add_to_path(f'{cuda_path}/libnvvp')
+    add_to_path('C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common')
+    add_to_path('C:/Program Files/NVIDIA Corporation/NVIDIA NvDLISR')
 
     print("CUDA environment variables set for this session.")
 

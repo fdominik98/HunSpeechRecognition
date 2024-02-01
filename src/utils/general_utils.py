@@ -88,6 +88,19 @@ def run_ffmpeg_command(command):
     output, error = process.communicate()
     return output, error
 
+def add_to_path(path : str):
+    current_path = os.environ.get('PATH', '')
+    new_path = f"{current_path};{path}"
+    os.environ['PATH'] = new_path
+
+def get_root_path() -> str:
+    return 'C:/Users/freyd/Desktop/HunSpeechRecognition'
+    current_path : str = os.environ.get('Path', '')
+    for path in current_path.split(';'):
+        if path.lower().replace('/', '').replace('\\', '').endswith('hunspeechrecognition'):
+            return path
+    raise Exception('A gyökér könyvtár nem található a Path környezeti változóban.')
+
 
 
    

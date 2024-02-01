@@ -9,6 +9,7 @@ from shutil import copy
 from managers.audio_file_manager import AudioFileManager
 from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
+from managers.environment_manager import EnvironmentManager
 
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
@@ -51,7 +52,7 @@ class ProjectInterface(CTk):
         self.project_folder_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
         self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
         self.project_folder_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.project_folder_textbox.insert("0.0", 'C:\\Users\\freyd\\Desktop\\HunSpeechRecognition\\PROBA')
+        self.project_folder_textbox.insert("0.0", 'C:/Users/freyd/Desktop/HunSpeechRecognition/PROBA')
         self.project_folder_textbox.configure(state="disabled")
 
         self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
@@ -65,6 +66,13 @@ class ProjectInterface(CTk):
 
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
+
+        try:
+            EnvironmentManager()
+        except Exception as e:
+            open_message(self, 'hiba', e)
+            self.message_window.protocol("WM_DELETE_WINDOW", self.destroy)
+            
 
         self.pipeline_process = PipelineProcess()
         self.pipeline_process.start()

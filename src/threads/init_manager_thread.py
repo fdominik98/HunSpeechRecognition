@@ -3,10 +3,14 @@ from models.settings import Settings
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager, AudioFileManager
 from managers.result_manager import ResultManager
 from managers.asset_tree_manager import AssetTreeManager
+from utils.general_utils import add_to_path
 
 class InitManagerThread(SpeechBaseThread): 
     def __init__(self, settings : Settings, error_callback):
         super().__init__('InitManagerThread', settings, error_callback)
+
+        add_to_path('C:/Users/freyd/Desktop/HunSpeechRecognition/ffmpeg-master-latest-win64-gpl/bin')
+
         self.asset_tree_manager = AssetTreeManager(settings=settings)
         self.result_manager = ResultManager(project_folder=self.settings.project_folder)
         self.split_audio_manager = SplitAudioFileManager(self.asset_tree_manager)

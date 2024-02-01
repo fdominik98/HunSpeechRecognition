@@ -47,7 +47,7 @@ class AudioFileManager(ABC):
 
     def _load(self):
         for entry in os.listdir(self.asset_folder):
-            file_path = os.path.join(self.asset_folder, entry)
+            file_path = f'{self.asset_folder}/{entry}'
             self._load_file(file_path)
                 
     def save_audio_file(self, audio_file : AudioFile) -> bool:

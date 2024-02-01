@@ -1,4 +1,4 @@
-from customtkinter import CTkToplevel, CTkFrame
+from customtkinter import CTkToplevel, CTkFrame, CTkTabview, CTkEntry
 from models.settings import Settings
 from models.process_state import ProcessState
 from threads.mp3_splitter_thread import Mp3SplitterThread
@@ -28,6 +28,12 @@ class MainWindow(CTkToplevel):
         self.init_manager_thread  = InitManagerThread(settings=settings, error_callback=self.error_callback)
         self.init_manager_thread.start()
 
+        # self.tabview = CTkTabview(self)
+        # self.tabview.grid(row=0, column=0, pady=5, padx=5, sticky="new")
+
+        # self.tab1 = self.tabview.add("tab 1")  # add tab at the end
+        # self.tab2 = self.tabview.add("tab 2")  # add tab at the end
+        # self.tabview.set("tab 1")  # set currently visible tab
         
         self.right_sidebar_frame = CTkFrame(self, corner_radius=0)
         self.right_sidebar_frame.grid(row=0, column=1, padx=(5,0), sticky="nsew")

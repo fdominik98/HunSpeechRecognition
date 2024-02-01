@@ -2,7 +2,7 @@ from customtkinter import CTkFrame, CTkButton, CTkSlider, CTkTextbox, CTkLabel, 
 import pygame
 from mutagen.mp3 import MP3
 import time
-from utils.general_utils import to_timestamp_sec, to_timestamp_1dec
+from utils.general_utils import to_timestamp_sec, get_root_path
 from utils.fonts import label_font, button_font, textbox_font
 import tktooltip
 from PIL import Image
@@ -22,7 +22,7 @@ class AudioPlayerFrame(CTkFrame):
         self.mp3_file : Optional[str] = None
         self.duration : int = 0
 
-        image_base_path = f'{os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))}/images'
+        image_base_path = f'{get_root_path()}/images'
         self.play_icon = CTkImage(Image.open(f'{image_base_path}/play.png'), size=(25, 25))
         self.pause_icon = CTkImage(Image.open(f'{image_base_path}/pause.png'), size=(25, 25))
         self.stop_icon = CTkImage(Image.open(f'{image_base_path}/stop.png'), size=(25, 25))
@@ -183,6 +183,9 @@ class AudioPlayerFrame(CTkFrame):
             self.after(50, self.update_slider_position)
 
     def load(self, source : AudioSource, audio_file : AudioFile):
+        if not os.path.exists(audio_file.file_path):
+            return
+
         self.is_playing = False
         self.mp3_file = audio_file.file_path
         pygame.mixer.music.load(audio_file.file_path)
