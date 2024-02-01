@@ -94,7 +94,7 @@ def add_to_path(path : str):
     os.environ['PATH'] = new_path
 
 def get_root_path() -> str:
-    return 'C:/Users/freyd/Desktop/HunSpeechRecognition'
+    #return 'C:/Users/freyd/Desktop/HunSpeechRecognition'
     current_path : str = os.environ.get('Path', '')
     for path in current_path.split(';'):
         if path.lower().replace('/', '').replace('\\', '').endswith('hunspeechrecognition'):

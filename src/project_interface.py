@@ -52,7 +52,7 @@ class ProjectInterface(CTk):
         self.project_folder_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
         self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
         self.project_folder_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.project_folder_textbox.insert("0.0", 'C:/Users/freyd/Desktop/HunSpeechRecognition/PROBA')
+        self.project_folder_textbox.insert("0.0", 'C:/Users/freyd/Desktop/HunSpeechRecognition/testing/PROBA')
         self.project_folder_textbox.configure(state="disabled")
 
         self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
