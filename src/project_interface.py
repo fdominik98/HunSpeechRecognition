@@ -10,9 +10,16 @@ from managers.audio_file_manager import AudioFileManager
 from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
 from managers.environment_manager import EnvironmentManager
+from multiprocessing import freeze_support
+import sys
+from custom_logging.setup_logging import setup_logging
+
+freeze_support() #Preventing multiple windows in production
 
 set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
+
+setup_logging()
 
 class ProjectInterface(CTk):   
     
@@ -112,17 +119,23 @@ class ProjectInterface(CTk):
 
     def __create_project(self):
         project_name = get_text(self.project_name_textbox)
+        project_folder = get_text(self.project_folder_textbox)
+        input_file = get_text(self.input_file_textbox)
+
         if empty(project_name):
             open_message(self, 'hiba', 'Add meg a projekt nevét!')
             return
-        input_file = get_text(self.input_file_textbox)
         if empty(input_file):
             open_message(self, 'hiba', 'Tölts be egy hangfájlt!')
             return
         
-        directory = f'{get_text(self.project_folder_textbox)}/{project_name}'
+        directory = f'{project_folder}/{project_name}'
         if os.path.exists(directory):
             open_message(self, 'hiba', 'A projekt már létezik ebben a mappában.')
+            return
+        
+        if not os.path.exists(f'{project_folder}/.audiorecproj'):
+            open_message(self, 'hiba', 'A projekt nem hozható létre egy másik projekt mappában.')
             return
         
         os.makedirs(directory)

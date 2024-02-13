@@ -42,10 +42,14 @@ class Mp3TrimmerThread(SpeechBaseThread):
                                absolute_timestamp=task.split_timestamp)
         
         if self.trimmed_audio_manager.save_audio_file(audiofile):
-            self.trimmed_audio_manager.insert_widget_queue.put(audiofile)
-        delete_index = self.split_audio_manager.delete_audio_file(audiofile)
-        if delete_index != None:
-            self.split_audio_manager.delete_widget_queue.put(delete_index)
+            try:
+                delete_index = self.split_audio_manager.delete_audio_file(audiofile)
+            except Exception as e:
+                self.trimmed_audio_manager.delete_audio_file(audiofile)
+                raise e
+            if delete_index != None:
+                self.trimmed_audio_manager.insert_widget_queue.put(audiofile)
+                self.split_audio_manager.delete_widget_queue.put(delete_index)
 
     def remove_silence(self, task: Task):
         command = [

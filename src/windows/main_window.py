@@ -107,9 +107,9 @@ class MainWindow(CTkToplevel):
         while not self.splitter_thread.input_queue.empty():
             self.splitter_thread.input_queue.get_nowait()
         while not self.trimmer_thread.input_queue.empty():
-            self.splitter_thread.input_queue.get_nowait()
+            self.trimmer_thread.input_queue.get_nowait()
         while not self.pipeline_manager_thread.input_queue.empty():
-            self.splitter_thread.input_queue.get_nowait()
+            self.pipeline_manager_thread.input_queue.get_nowait()
         
         self.pipeline_manager_thread.reset()
                  
@@ -123,6 +123,7 @@ class MainWindow(CTkToplevel):
                     
 
     def error_callback(self, message, thread):
+        self.__cancel_processing()
         self.process_control_frame.switch_to_stop_mode()
         open_message(self, "hiba", f'{message} - {thread}') 
 

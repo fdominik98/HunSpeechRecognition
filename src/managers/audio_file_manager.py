@@ -70,11 +70,21 @@ class AudioFileManager(ABC):
     def __do_delete_audio_file(self, audio_file : AudioFile) -> Optional[int]:
         found_object = next((obj for obj in self.__audio_file_list if obj.segment_number == audio_file.segment_number), None)
         if found_object:
+            self.delete_file_safe(found_object.file_path)
             index = self.__audio_file_list.index(found_object)
             self.__audio_file_list.remove(found_object)
-            os.remove(found_object.file_path)
             return index
         return None
+
+    def delete_file_safe(self, file_path):
+        try:
+            # Try to rename the file, which can fail if the file is in use
+            temp_path = file_path + '.tmp'
+            os.rename(file_path, temp_path)
+            # If successful, delete the file
+            os.remove(temp_path)
+        except OSError as e:
+            raise OSError('A fájl nem törölhető mert használatban van. Próbáld leállítani a lejátszást és indítsd újra a műveletet!')
 
     def delete_audio_file(self, audio_file : AudioFile) -> Optional[int]:
         with self.__lock:

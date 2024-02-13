@@ -1,10 +1,13 @@
 **/*.mp3
 **/*.wav
 **/*.mkv
+**/*.exe
 venv
 env
 **/__pycache__
-cuda_12.3.1_546.12_windows.exe
-cudnn-windows-x86_64-8.9.6.50_cuda12-archive
-ffmpeg-master-latest-win64-gpl
+**/cudnn-windows-x86_64-8.9.6.50_cuda12-archive
+**/ffmpeg-master-latest-win64-gpl
 testing
+**/dist
+**/build
+log/*

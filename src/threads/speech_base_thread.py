@@ -1,6 +1,8 @@
 from threading import Thread, Event
 from abc import ABC, abstractmethod
 from models.settings import Settings
+import traceback
+import logging
 
 class SpeechBaseThread(Thread, ABC):    
     daemon = True
@@ -18,6 +20,8 @@ class SpeechBaseThread(Thread, ABC):
            self.do_run()
            print(f"{self.name} terminated gracefully.")           
         except Exception as e:
+           logging.getLogger().error(e)
+           traceback.print_exc()
            self.error_callback(e, self.name)
 
     @abstractmethod

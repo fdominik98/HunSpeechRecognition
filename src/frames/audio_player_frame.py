@@ -184,6 +184,7 @@ class AudioPlayerFrame(CTkFrame):
 
     def load(self, source : AudioSource, audio_file : AudioFile):
         if not os.path.exists(audio_file.file_path):
+            self.stop()
             return
 
         self.is_playing = False

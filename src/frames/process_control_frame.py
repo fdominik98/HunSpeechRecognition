@@ -56,7 +56,8 @@ class ProcessControlFrame(CTkFrame):
         self.update_progress()
 
 
-    def switch_to_stop_mode(self):        
+    def switch_to_stop_mode(self):  
+        self.process_state = ProcessState.STOPPED      
         self.small_progressbar.grid_remove()
         self.small_progressbar.stop()
         self.progressbar.grid_remove()  
@@ -69,24 +70,23 @@ class ProcessControlFrame(CTkFrame):
     
 
     def __on_cancel_process_click(self):
-        self.process_state = ProcessState.STOPPED
-        self.__call_process_state_change_callbacks(True)       
         self.switch_to_stop_mode()
+        self.__call_process_state_change_callbacks(True)       
 
     def __on_start_splitting_click(self):
         self.process_state = ProcessState.SPLITTING
-        self.__call_process_state_change_callbacks(True)       
         self.switch_to_process_mode()
+        self.__call_process_state_change_callbacks(True)       
 
     def __on_start_trimming_click(self):
         self.process_state = ProcessState.TRIMMING
-        self.__call_process_state_change_callbacks(True)        
         self.switch_to_process_mode()
+        self.__call_process_state_change_callbacks(True)        
 
     def __on_start_generating_click(self):
         self.process_state = ProcessState.GENERATING
-        self.__call_process_state_change_callbacks(True)       
         self.switch_to_process_mode()
+        self.__call_process_state_change_callbacks(True)       
 
     def __call_process_state_change_callbacks(self, forced : bool):
         for process_state_change_callback in self.process_state_change_callbacks:
@@ -106,9 +106,8 @@ class ProcessControlFrame(CTkFrame):
         self.progressbar.set(new_value)
         self.progress_label.configure(text=f'{self.process_state.value} {round(new_value * 100)} %') 
         if new_value >= 1.0:
-            self.process_state = ProcessState.STOPPED
-            self.__call_process_state_change_callbacks(False)
             self.switch_to_stop_mode()
+            self.__call_process_state_change_callbacks(False)
         self.after(1000, self.update_progress)
 
     def switch_to_process_mode(self):        

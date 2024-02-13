@@ -4,4 +4,4 @@ cuda_libnvvp_path : 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/li
 cudnn_bin_path : 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3/bin'
 physx_path : 'C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common'
 nvdlisr_path : 'C:/Program Files/NVIDIA Corporation/NVIDIA NvDLISR'
-ffmpeg_path : 'C:/Users/freyd/Desktop/HunSpeechRecognition/ffmpeg-master-latest-win64-gpl/bin'
+ffmpeg_path : 'C:/Program Files/FFMPEG/ffmpeg-master-latest-win64-gpl/bin'
