@@ -12,21 +12,23 @@ class EnvironmentManager():
     def __load_environment(self):
         with self.__lock:
             if os.path.exists(self.__file_path):
-                self.__environment = Environment.parse_file(self.__file_path)
+                self.__environment : Environment = Environment.parse_file(self.__file_path)
             else:
-                self.__environment = Environment()
+                self.__environment : Environment = Environment()
                 with open(self.__file_path, 'w') as file:
                     file.write(self.__environment.yaml())
-                raise Exception('A környezeti változó függőségek nincsenek configurálva ([gyökér könyvtár]/dependencies/environment.yaml)')
+                raise Exception('A környezeti változó függőségek nincsenek configurálva ([Telepitő mappa]/dependencies/environment.yaml)')
             
-            add_to_path(self.__environment.cuda_path)
-            add_to_path(self.__environment.cuda_bin_path)
-            add_to_path(self.__environment.cuda_libnvvp_path)
-            add_to_path(self.__environment.cudnn_bin_path)
-            add_to_path(self.__environment.physx_path)
-            add_to_path(self.__environment.nvdlisr_path)
-            add_to_path(self.__environment.ffmpeg_path)
-            os.environ['CUDA_PATH'] = self.__environment.cuda_path
+            add_to_path(self.__environment.cuda_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.cuda_bin_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.cuda_libnvvp_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.physx_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.nvdlisr_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.ffmpeg_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.ffmpeg_path2.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.cudnn_bin_path.replace('[INSTALL_DIR]', get_root_path()))
+            add_to_path(self.__environment.cudnn_bin_path2.replace('[INSTALL_DIR]', get_root_path()))
+            os.environ['CUDA_PATH'] = self.__environment.cuda_path.replace('[INSTALL_DIR]', get_root_path())
             
 
     def save_settings(self) -> None:

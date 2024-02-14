@@ -2,10 +2,10 @@
 
 
 a = Analysis(
-    ['src\\project_interface.py'],
+    ['../src/project_interface.py'],
     pathex=[],
     binaries=[],
-    datas=[('images/*', 'images')],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -20,7 +20,7 @@ exe = EXE(
     a.scripts,
     [('v', None, 'OPTION')],
     exclude_binaries=True,
-    name='project_interface',
+    name='hunspeechrecognition',
     debug=True,
     bootloader_ignore_signals=False,
     strip=False,
@@ -31,7 +31,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='images/icon.ico',
+    icon='../images/icon.ico',
 )
 coll = COLLECT(
     exe,
@@ -40,6 +40,6 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='project_interface',
+    name='hunspeechrecognition',
 )
 
