@@ -29,9 +29,15 @@ class Mp3TrimmerThread(SpeechBaseThread):
 
 
     def process_file(self, task : Task):
-        if not os.path.exists(task.trim_file_path) and os.path.exists(task.split_file_path) and os.path.getsize(task.split_file_path) > 0:
-            self.remove_silence(task)
-            sleep(0.5)          
+        if not os.path.exists(task.trim_file_path) and os.path.getsize(task.split_file_path) > 0:
+            if os.path.exists(task.split_file_path):
+                self.remove_silence(task)
+                print(f'{task.split_file_path} trimmed successfully.')
+                sleep(0.5)    
+            else:
+                print(f'{task.split_file_path} does not exist, cannot trim.')      
+        else:
+            print(f'{task.trim_file_path} exists or {task.split_file_path} is too small. Skipping...')
 
         if task.process_state == ProcessState.GENERATING:
             self.output_queue.put(task)

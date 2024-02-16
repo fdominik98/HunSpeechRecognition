@@ -2,7 +2,7 @@ import sys
 from custom_logging.stream_to_logger import StreamToLogger
 import logging
 from logging.handlers import RotatingFileHandler
-from utils.general_utils import get_root_path
+from models.environment import get_root_path
 
 def setup_logging():
     logger = logging.getLogger()

@@ -62,7 +62,8 @@ class MainWindow(CTkToplevel):
                                                      split_audio_manager=self.init_manager_thread.split_audio_manager,
                                                      trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
                                                      original_audio_manager=self.init_manager_thread.original_audio_manager,
-                                                     load_audio_callback=self.audio_player_frame.load)   
+                                                     audio_load_callback=self.audio_player_frame.load,
+                                                     audio_play_callback=self.audio_player_frame.play)   
 
                                                      
                                                                 

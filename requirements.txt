@@ -9,7 +9,6 @@ pyyaml==6.0.1
 pygame==2.5.2
 mutagen==1.47.0
 pydantic_yaml[ruamel, pyyaml]==0.8.1
-CTkListbox==1.2
 pillow==10.2.0
 faster-whisper==0.10.0
 tkinter-tooltip==3.0.0

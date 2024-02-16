@@ -2,7 +2,7 @@ import os
 from customtkinter import CTkTextbox
 import hashlib
 from mutagen.mp3 import MP3
-from subprocess import PIPE, Popen
+from subprocess import PIPE, Popen, STARTUPINFO, SW_HIDE, STARTF_USESHOWWINDOW
 
 def get_audio_duration(file_path):
     audio = MP3(file_path)        
@@ -84,22 +84,16 @@ def to_timestamp_1dec(seconds):
         return f"{minutes}:{remaining_seconds:04.1f}"
     
 def run_ffmpeg_command(command):
-    process = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    # Create a STARTUPINFO structure
+    startupinfo = STARTUPINFO()
+    startupinfo.dwFlags |= STARTF_USESHOWWINDOW
+    # Prevents the console window from being shown
+    startupinfo.wShowWindow = SW_HIDE
+    # Example of running a command without showing a console window
+    process = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, startupinfo=startupinfo)
     output, error = process.communicate()
     return output, error
 
-def add_to_path(path : str):
-    current_path = os.environ.get('PATH', '')
-    new_path = f"{current_path};{path}"
-    os.environ['PATH'] = new_path
-
-def get_root_path() -> str:
-    #return 'C:/Users/freyd/Desktop/HunSpeechRecognition'
-    current_path : str = os.environ.get('Path', '')
-    for path in current_path.split(';'):
-        if path.lower().replace('/', '').replace('\\', '').endswith('hunspeechrecognition'):
-            return path
-    raise Exception('A gyökér könyvtár nem található a Path környezeti változóban.')
 
 
 

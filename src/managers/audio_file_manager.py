@@ -1,6 +1,6 @@
 from threading import Lock
 from abc import ABC 
-from models.audio_file import AudioFile
+from models.audio_file import AudioFile, AudioSource
 import os
 import json
 from mutagen.mp3 import MP3
@@ -17,6 +17,7 @@ class AudioFileManager(ABC):
         self.__audio_file_list : list[AudioFile] = []
         self.insert_widget_queue : Queue = Queue()
         self.delete_widget_queue : Queue = Queue()
+        self.audio_source = AudioSource.ORIGINAL
 
     def load(self):
         with self.__lock:
@@ -70,13 +71,13 @@ class AudioFileManager(ABC):
     def __do_delete_audio_file(self, audio_file : AudioFile) -> Optional[int]:
         found_object = next((obj for obj in self.__audio_file_list if obj.segment_number == audio_file.segment_number), None)
         if found_object:
-            self.delete_file_safe(found_object.file_path)
+            self.__delete_file_safe(found_object.file_path)
             index = self.__audio_file_list.index(found_object)
             self.__audio_file_list.remove(found_object)
             return index
         return None
 
-    def delete_file_safe(self, file_path):
+    def __delete_file_safe(self, file_path):
         try:
             # Try to rename the file, which can fail if the file is in use
             temp_path = file_path + '.tmp'
@@ -91,22 +92,27 @@ class AudioFileManager(ABC):
             return self.__do_delete_audio_file(audio_file)
 
     def delete_at_index(self, index : int) -> Optional[int]:
-        if index > self.size()-1:
-            return None
         with self.__lock:
+            if index > len(self.__audio_file_list)-1:
+                return None
             return self.__do_delete_audio_file(self.__audio_file_list[index])
                     
-    def get(self) -> list[AudioFile]:
+    def get_all(self) -> list[AudioFile]:
         with self.__lock:
             return self.__audio_file_list
+
+    def get(self, index : int) -> AudioFile:
+        with self.__lock:
+            return self.__audio_file_list[index]
         
     def size(self) -> int:
         with self.__lock:
             return len(self.__audio_file_list)
         
     def delete_all(self):
-        for audio_file in self.get():
-            self.__do_delete_audio_file(audio_file)
+        with self.__lock:
+            for audio_file in self.__audio_file_list:
+                self.__do_delete_audio_file(audio_file)
         
 
 
@@ -114,6 +120,7 @@ class SplitAudioFileManager(AudioFileManager):
     def __init__(self, asset_manager : AssetTreeManager) -> None:
         super().__init__(asset_manager.split_folder)
         self.asset_manager : AssetTreeManager = asset_manager
+        self.audio_source = AudioSource.SPLITLIST
 
     def _load(self):
         for task in self.asset_manager.get():
@@ -123,6 +130,7 @@ class TrimmedAudioFileManager(AudioFileManager):
     def __init__(self, asset_manager : AssetTreeManager) -> None:
         super().__init__(asset_manager.trim_folder)
         self.asset_manager : AssetTreeManager = asset_manager
+        self.audio_source = AudioSource.TRIMLIST
 
     def _load(self):
         for task in self.asset_manager.get():

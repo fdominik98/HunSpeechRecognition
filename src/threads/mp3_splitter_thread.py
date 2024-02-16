@@ -42,13 +42,16 @@ class Mp3SplitterThread(SpeechBaseThread):
                 task.split_file_path
             ]
             stdout, stderr = run_ffmpeg_command(command)
+            print(f'{task.split_file_path} split successfully.') 
 
             split_audio_file = AudioFile(segment_number=task.segment_number, file_path=task.split_file_path,
                                         relative_timestamp=task.split_timestamp, absolute_timestamp=task.split_timestamp)
 
             if self.split_audio_manager.save_audio_file(split_audio_file):
                 self.split_audio_manager.insert_widget_queue.put(split_audio_file)
-            sleep(0.5)            
+            sleep(0.5) 
+        else:
+            print(f'{task.split_file_path} already split. Skipping...')            
 
         if task.process_state == ProcessState.TRIMMING or task.process_state == ProcessState.GENERATING:
             self.output_queue.put(task) 

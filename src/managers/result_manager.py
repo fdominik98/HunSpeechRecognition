@@ -79,26 +79,3 @@ class ResultManager():
                 start_pos = self.__result_list[-1].sentence_pos[1] + 2
             end_pos = start_pos + len(text) - 1
             return (start_pos, end_pos)
-
-
-    def find_by_text_pos(self, index : str) -> Optional[ResultRow]:
-        low = 0
-        high = self.size() - 1
-        y_position = int(index.split('.')[0])
-        x_position = int(index.split('.')[1])
-
-        if self.size() >= y_position:
-            return self.get(y_position - 1)
-        print(f'Warning: No result found at the given index! clicked position is {y_position}, but result size is {self.size()}')
-        return None
-
-        while low <= high:
-            mid = (low + high) // 2
-            if self.get(mid).sentence_pos[0] <= x_position <= self.get(mid).sentence_pos[1]:
-                return self.get(mid)
-            elif x_position < self.get(mid).sentence_pos[0]:
-                high = mid - 1
-            else:
-                low = mid + 1
-        print('Warning: No result found at the given index!')
-        return None

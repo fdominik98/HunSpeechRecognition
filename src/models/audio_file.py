@@ -1,6 +1,14 @@
 import os
 from utils.general_utils import to_timestamp_sec
 from models.result_row import ResultRow
+from enum import Enum, unique
+
+@unique
+class AudioSource(Enum):
+    ORIGINAL = 'Eredeti hangfájl'
+    PREVIEWTEXT = 'Előnézet szöveg'
+    SPLITLIST = 'Vágatlan szegmensek'
+    TRIMLIST = 'Vágott szegmensek'
 
 class AudioFile():
     def __init__(self, segment_number : int, file_path : str, relative_timestamp : tuple[float, float], absolute_timestamp : tuple[float, float]) -> None:

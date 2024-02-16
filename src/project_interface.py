@@ -11,7 +11,6 @@ from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
 from managers.environment_manager import EnvironmentManager
 from multiprocessing import freeze_support
-import sys
 from custom_logging.setup_logging import setup_logging
 
 freeze_support() #Preventing multiple windows in production
