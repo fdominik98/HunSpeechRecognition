@@ -10,16 +10,20 @@ from PIL import Image
 import os
 from models.audio_file import AudioFile, AudioSource
 from typing import Optional
+from managers.loadable_manager import LoadableManager
 
 class AudioPlayerFrame(CTkFrame):
     def __init__(self, parent : CTkFrame, row, column):
         super().__init__(parent, height=80)
+        self.refresh_cursor_position = None
+
         pygame.init()
         pygame.mixer.init()
 
         self.is_playing : bool = False
         self.start_time : Optional[float] = None
-        self.mp3_file : Optional[str] = None
+        self.audio_file : Optional[AudioFile] = None
+        self.file_manager : Optional[LoadableManager] = None 
         self.duration : int = 0
 
         image_base_path = f'{get_root_path()}/images'
@@ -37,9 +41,6 @@ class AudioPlayerFrame(CTkFrame):
 
         self.play_button = CTkButton(self, text="", command=self.play, font=button_font(), image=self.play_icon, corner_radius=40, width=80)
         self.play_button.grid(row=0, pady=(25, 0), padx=2, column=1)
-
-        # self.pause_button = CTkButton(self, text="", command=self.pause, font=button_font(), image=pause, corner_radius=40, width=80)
-        # self.pause_button.grid(row=0, pady=(25, 0), padx=2, column=2)
 
         self.stop_button = CTkButton(self, text="", command=self.stop, font=button_font(), image=self.stop_icon, corner_radius=40, width=80)
         self.stop_button.grid(row=0, pady=(25, 0), padx=2, column=2)
@@ -142,7 +143,8 @@ class AudioPlayerFrame(CTkFrame):
         self.end_time_label.configure(text=to_timestamp_sec(0))
         self.start_time_label.configure(text=to_timestamp_sec(0))
         pygame.mixer.music.unload()
-        self.mp3_file = None
+        self.audio_file = None
+        self.file_manager = None
 
         self.audio_info_textbox.configure(state='normal')
         self.audio_info_textbox.delete("1.0", END)
@@ -166,15 +168,19 @@ class AudioPlayerFrame(CTkFrame):
                 self.pause()
 
     def update_duration(self):
-        audio = MP3(self.mp3_file)
+        audio = MP3(self.audio_file.file_path)
         self.duration = audio.info.length
         self.end_time_label.configure(text=to_timestamp_sec(self.duration)) 
 
     def update_slider_position(self):
         if not self.winfo_exists():
             return
+        
+        elapsed_time = time.time() - self.start_time
+        if self.refresh_cursor_position:
+            self.refresh_cursor_position(self.audio_file, elapsed_time)
+
         if self.is_playing:
-            elapsed_time = time.time() - self.start_time
             self.navigation_slider.set(elapsed_time / self.duration * 100)
             self.start_time_label.configure(text=to_timestamp_sec(elapsed_time))
             if elapsed_time >= self.duration:
@@ -182,16 +188,17 @@ class AudioPlayerFrame(CTkFrame):
                 return
             self.after(50, self.update_slider_position)
 
-    def load(self, source : AudioSource, audio_file : AudioFile):
-        if not os.path.exists(audio_file.file_path):
+    def load(self, file_manager : LoadableManager, audio_file : Optional[AudioFile]):
+        if audio_file is None or not audio_file.exists():
             self.stop()
             return
 
         self.is_playing = False
-        self.mp3_file = audio_file.file_path
+        self.audio_file = audio_file
+        self.file_manager = file_manager
         pygame.mixer.music.load(audio_file.file_path)
 
-        if source == AudioSource.PREVIEWTEXT:
+        if self.file_manager.audio_source == AudioSource.PREVIEWTEXT:
             start_time = audio_file.relative_timestamp[0]
         else:
             start_time = 0
@@ -199,10 +206,12 @@ class AudioPlayerFrame(CTkFrame):
         self.update_duration()
         self.navigation_slider.set(start_time / self.duration * 100)
         self.navigate(start_time)
+        if self.refresh_cursor_position:
+            self.refresh_cursor_position(self.audio_file, start_time)
 
         self.audio_info_textbox.configure(state='normal')
         self.audio_info_textbox.delete("1.0", END)
-        self.audio_info_textbox.insert(END, f'- Forrás: {source.value}\n')
+        self.audio_info_textbox.insert(END, f'- Forrás: {self.file_manager.audio_source.value}\n')
         self.audio_info_textbox.insert(END, f'- Fájl: {os.path.basename(audio_file.file_path)}\n')
         self.audio_info_textbox.insert(END, f'- Útvonal: {audio_file.file_path}\n')
         timestamp_str =f'{to_timestamp_sec(audio_file.absolute_timestamp[0])} - {to_timestamp_sec(audio_file.absolute_timestamp[1])}'
@@ -213,5 +222,5 @@ class AudioPlayerFrame(CTkFrame):
 
 
     def loaded(self):
-        return self.mp3_file is not None
+        return self.audio_file is not None
 

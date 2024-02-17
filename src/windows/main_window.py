@@ -46,6 +46,7 @@ class MainWindow(CTkToplevel):
                                                     result_manager=self.init_manager_thread.result_manager,
                                                     audio_load_callback=self.audio_player_frame.load,
                                                     audio_play_callback=self.audio_player_frame.play)
+        self.audio_player_frame.refresh_cursor_position = self.result_prev_frame.textbox.refresh_cursor_position
         
                     
 
@@ -93,12 +94,14 @@ class MainWindow(CTkToplevel):
         self.start_pipeline_manager_thread()
 
 
-    def destroy_threads(self):
+    def stop_threads(self):
         self.init_manager_thread.stop()
         self.trimmer_thread.stop()
         self.pipeline_manager_thread.stop()
         self.splitter_thread.stop()
 
+    def destroy_threads(self):
+        self.stop_threads()
         self.init_manager_thread.join()
         self.trimmer_thread.join()
         self.pipeline_manager_thread.join()
@@ -124,7 +127,11 @@ class MainWindow(CTkToplevel):
                     
 
     def error_callback(self, message, thread):
-        self.__cancel_processing()
+        self.stop_threads()
+        self.start_pipeline_manager_thread()
+        self.start_splitter_thread()
+        self.start_trimmer_thread()
+        
         self.process_control_frame.switch_to_stop_mode()
         open_message(self, "hiba", f'{message} - {thread}') 
 

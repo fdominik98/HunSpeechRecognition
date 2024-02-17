@@ -56,7 +56,7 @@ class PipelineManagerThread(SpeechBaseThread):
                 if task.segment_number == self.result_manager.next_segment_num():
                     result_list = self.result_manager.save_results(segments, task)
                     for result in result_list:
-                        self.result_manager.widget_queue.put(result)
+                        self.result_manager.insert_widget_queue.put(result)
                     saved_tasks.append((segments, task))
             if len(saved_tasks) == 0:
                 break

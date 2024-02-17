@@ -39,8 +39,8 @@ class ResultPreviewFrame(CTkFrame):
         if not self.winfo_exists():
             return
         found = False
-        if not self.result_manager.widget_queue.empty():
-            result : ResultRow = self.result_manager.widget_queue.get()
+        if not self.result_manager.insert_widget_queue.empty():
+            result : ResultRow = self.result_manager.insert_widget_queue.get()
             self.textbox.insert_row(result.id + 1, result.sentence)
             found = True
         if found:

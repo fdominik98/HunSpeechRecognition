@@ -22,7 +22,7 @@ class InitManagerThread(SpeechBaseThread):
         self.trimmed_audio_manager.load()
 
         for result in self.result_manager.get_all():
-            self.result_manager.widget_queue.put(result)
+            self.result_manager.insert_widget_queue.put(result)
         for audio_file in self.original_audio_manager.get_all():
             self.original_audio_manager.insert_widget_queue.put(audio_file)
         for audio_file in self.split_audio_manager.get_all():

@@ -1,9 +1,10 @@
 from customtkinter import CTkTextbox, END, CURRENT, NONE
 from utils.fonts import textbox_font
 from managers.result_manager import ResultManager
-from managers.audio_file_manager import AudioFileManager
-from models.audio_file import TextAudioFile, AudioSource
+from managers.audio_file_manager import AudioFileManager, TrimmedAudioFileManager
+from models.audio_file import TextAudioFile, AudioFile
 from abc import ABC, abstractmethod
+from typing import Optional
 
 class InteractiveTextbox(CTkTextbox, ABC):
     def __init__(self, master, audio_load_callback, audio_play_callback, width=200, height=200):
@@ -15,6 +16,9 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.tag_config(self.selected_tag, background="#999999")
         self.bind("<Button-1>", command=self.on_text_click)
         self.bind("<Double-1>", command=self.on_text_double_click)
+
+        self.cursor_tag = 'cursor_tag'
+        self.tag_config(self.cursor_tag, background="green")
 
         self.configure(state="disabled")
 
@@ -69,7 +73,7 @@ class AudioInteractiveTextbox(InteractiveTextbox):
         if index > self.audio_file_manager.size() - 1:
             return
         audio_file = self.audio_file_manager.get(index)
-        self.audio_load_callback(self.audio_file_manager.audio_source, audio_file)
+        self.audio_load_callback(self.audio_file_manager, audio_file)
 
 
 class ResultInteractiveTextbox(InteractiveTextbox):
@@ -81,4 +85,22 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         if index > self.result_manager.size() - 1:
             return
         result = self.result_manager.get(index)
-        self.audio_load_callback(AudioSource.PREVIEWTEXT, TextAudioFile(result))
+        audio_file = TrimmedAudioFileManager.load_file(result.chunk_file)
+        self.audio_load_callback(self.result_manager, TextAudioFile(result))
+
+    def refresh_cursor_position(self, audio_file : Optional[AudioFile], elapsed_time : float):
+        self.tag_remove(self.cursor_tag, '1.0', END)
+        if audio_file is None:
+            return
+        result = self.result_manager.get_result_by_audio(audio_file, elapsed_time)
+        if result is None:
+            return
+        ratio = (elapsed_time - result.relative_timestamp[0]) / (result.relative_timestamp[1] - result.relative_timestamp[0])
+        char_index = round(ratio * len(result.sentence))
+        end_index = int(self.index(f"{result.id + 1}.end").split('.')[1])
+        if char_index > end_index:
+            char_index_str = str(max(end_index - 1, 0))
+        else:
+            char_index_str = str(max(char_index - 1, 0))
+        self.tag_add(self.cursor_tag, f'{result.id + 1}.{char_index_str}', f'{result.id + 1}.{char_index_str} +1c')
+        

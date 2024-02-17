@@ -20,7 +20,8 @@ class AudioFile():
     def __str__(self) -> str:
         return f'{os.path.basename(self.file_path)} {to_timestamp_sec(self.relative_timestamp[0])}-{to_timestamp_sec(self.relative_timestamp[1])}'
     
-
+    def exists(self) -> bool:
+         return os.path.exists(self.file_path)
 
 class TextAudioFile(AudioFile):
     def __init__(self, result : ResultRow) -> None:
