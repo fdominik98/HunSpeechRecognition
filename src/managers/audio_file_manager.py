@@ -1,10 +1,10 @@
-from abc import ABC 
-from models.audio_file import AudioFile, AudioSource
 import os
 import json
+from typing import Optional
+from abc import ABC 
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, COMM
-from typing import Optional
+from models.audio_file import AudioFile, AudioSource
 from managers.asset_tree_manager import AssetTreeManager
 from managers.loadable_manager import LoadableManager
 from models.result_row import ResultRow
@@ -33,7 +33,7 @@ class AudioFileManager(LoadableManager, ABC):
                 if tag.desc == 'AudioInfo':
                     serialized_data = tag.text[0]
                     break
-            if serialized_data == None:
+            if serialized_data is None:
                 print('Warning: No data found in one of the segments!')
                 return None
             # Deserialize the data
@@ -52,7 +52,7 @@ class AudioFileManager(LoadableManager, ABC):
                 
     def save_audio_file(self, audio_file : AudioFile) -> bool:
         with self._lock:
-            if any([obj.segment_number == audio_file.segment_number for obj in self._audio_file_list]):
+            if any(obj.segment_number == audio_file.segment_number for obj in self._audio_file_list):
                 return False
             self._audio_file_list.append(audio_file)
             audio = MP3(audio_file.file_path, ID3=ID3)

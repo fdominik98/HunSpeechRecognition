@@ -1,0 +1,8 @@
+{
+    // Enables linting in VS Code using Pylint.
+    "python.linting.pylintEnabled": true,
+    // Enables linting in general. This should be true to allow Pylint or any other linter to work.
+    "python.linting.enabled": true,
+    // Format on save using the default formatter specified in your settings.
+    "editor.formatOnSave": true,
+}

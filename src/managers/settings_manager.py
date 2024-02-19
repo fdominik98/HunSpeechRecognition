@@ -1,6 +1,6 @@
+import os
 from threading import Lock
 from models.settings import Settings
-import os
 
 class SettingsManager():
     def __init__(self, project_folder) -> None:

@@ -1,10 +1,10 @@
-from models.task import Task
-from faster_whisper import WhisperModel
-from models.segment import Segment
-from threading import Thread, Event
-from multiprocessing import Queue as ProcessQueue
-from queue import Queue as ThreadQueue
 from datetime import datetime
+from multiprocessing import Queue as ProcessQueue
+from threading import Thread, Event
+from queue import Queue as ThreadQueue
+from faster_whisper import WhisperModel
+from models.task import Task
+from models.segment import Segment
 
 class PipelineProducerThread(Thread): 
     daemon = True

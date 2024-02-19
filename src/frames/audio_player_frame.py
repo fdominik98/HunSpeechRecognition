@@ -1,16 +1,15 @@
+import os
+import time
+from typing import Optional
 from customtkinter import CTkFrame, CTkButton, CTkSlider, CTkTextbox, CTkLabel, HORIZONTAL, VERTICAL, CTkImage, END
 import pygame
-from mutagen.mp3 import MP3
-import time
+from PIL import Image
+import tktooltip
 from models.result_row import ResultRow
 from utils.general_utils import to_timestamp_sec, timestamp_str
 from models.environment import get_root_path
 from utils.fonts import label_font, button_font, textbox_font
-import tktooltip
-from PIL import Image
-import os
 from models.audio_file import AudioFile, AudioSource
-from typing import Optional
 from managers.audio_file_manager import AudioFileManager
 
 class AudioPlayerFrame(CTkFrame):

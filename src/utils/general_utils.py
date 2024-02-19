@@ -1,20 +1,10 @@
-import os
-from customtkinter import CTkTextbox
-import hashlib
-from mutagen.mp3 import MP3
 from subprocess import PIPE, Popen, STARTUPINFO, SW_HIDE, STARTF_USESHOWWINDOW
+from mutagen.mp3 import MP3
+from customtkinter import CTkTextbox
 
 def get_audio_duration(file_path):
     audio = MP3(file_path)        
     return float(audio.info.length) 
-
-def append_to_file_name(original_path, prefix):
-    # Split the original path into directory and file name
-    directory, old_file_name = os.path.split(original_path)
-
-    # Replace the old file name with the new name
-    new_path = f'{directory}/{prefix + old_file_name}'
-    return new_path
 
 def empty(text : str):
     return ''.join(text.split()) == ''
@@ -22,15 +12,6 @@ def empty(text : str):
 
 def get_text(textbox : CTkTextbox):
     return textbox.get('0.0', 'end').strip()
-
-
-def generate_hash(input_string):
-    # Create a new sha256 hash object
-    hasher = hashlib.sha256()
-    # Update the hash object with the bytes of the input string
-    hasher.update(input_string.encode())
-    # Return the hexadecimal digest of the hash
-    return hasher.hexdigest()
 
 
 def to_timestamp_sec(seconds):
@@ -56,8 +37,7 @@ def to_timestamp_sec(seconds):
     # Format the time including hours if more than an hour
     if hours > 0:
         return f"{hours}:{minutes:02d}:{seconds:02d}"
-    else:
-        return f"{minutes}:{seconds:02d}"
+    return f"{minutes}:{seconds:02d}"
 
 
 def to_timestamp_1dec(seconds):
@@ -80,8 +60,7 @@ def to_timestamp_1dec(seconds):
     # Format the time with hours if more than an hour, and with one decimal place for seconds
     if hours > 0:
         return f"{hours}:{minutes:02d}:{remaining_seconds:04.1f}"
-    else:
-        return f"{minutes}:{remaining_seconds:04.1f}"
+    return f"{minutes}:{remaining_seconds:04.1f}"
     
 def run_ffmpeg_command(command):
     # Create a STARTUPINFO structure

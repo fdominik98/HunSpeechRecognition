@@ -1,13 +1,13 @@
-from threads.speech_base_thread import SpeechBaseThread
 import os
+from time import sleep
+from queue import Queue
+from utils.general_utils import run_ffmpeg_command
+from threads.speech_base_thread import SpeechBaseThread
 from models.task import Task
 from models.audio_file import AudioFile
 from models.settings import Settings
 from models.process_state import ProcessState
-from queue import Queue
-from time import sleep
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
-from utils.general_utils import run_ffmpeg_command
 
 
 class Mp3TrimmerThread(SpeechBaseThread): 
@@ -54,7 +54,7 @@ class Mp3TrimmerThread(SpeechBaseThread):
             except Exception as e:
                 self.trimmed_audio_manager.delete_audio_file(audiofile)
                 raise e
-            if delete_index != None:
+            if delete_index is not None:
                 self.trimmed_audio_manager.insert_widget_queue.put(audiofile)
                 self.split_audio_manager.delete_widget_queue.put(delete_index)
 

@@ -1,12 +1,12 @@
 import csv
 import os
+from typing import Optional
 from models.result_row import ResultRow
 from models.task import Task
 from models.segment import Segment
 from models.audio_file import AudioSource
 from managers.loadable_manager import LoadableManager
 from models.audio_file import AudioFile
-from typing import Optional
 
 class ResultManager(LoadableManager):
     def __init__(self, project_folder) -> None:

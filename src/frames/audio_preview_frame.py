@@ -1,10 +1,10 @@
-from customtkinter import CTkFrame, CTkLabel, CTkSlider, CTkButton
+from typing import Optional
 from tkinter import messagebox
+from customtkinter import CTkFrame, CTkLabel, CTkSlider, CTkButton
 from utils.fonts import label_font, small_button_font
 from models.settings import Settings
 from models.audio_file import AudioFile
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager, AudioFileManager
-from typing import Optional
 from models.process_state import ProcessState
 from widgets.interactive_textbox import AudioInteractiveTextbox
 
@@ -89,7 +89,7 @@ class AudioPreviewFrame(CTkFrame):
             self.audio_stop_callback()
             while self.split_audio_manager.size() > 0:
                 delete_index : Optional[int] = self.split_audio_manager.delete_at_index(0)
-                if delete_index == None:
+                if delete_index is None:
                     return
                 self.split_textbox.delete_row(delete_index + 1)
     
@@ -99,7 +99,7 @@ class AudioPreviewFrame(CTkFrame):
             self.audio_stop_callback()
             while self.trimmed_audio_manager.size() > 0:
                 delete_index : Optional[int] = self.trimmed_audio_manager.delete_at_index(0)
-                if delete_index == None:
+                if delete_index is None:
                     return
                 self.trim_textbox.delete_row(delete_index + 1)
 

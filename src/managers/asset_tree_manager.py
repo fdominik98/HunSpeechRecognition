@@ -14,6 +14,7 @@ class AssetTreeManager():
         self.asset_tree_file = f'{self.assets_folder}/asset_tree.json'
         self.__lock = Lock()
         self.__task_list : list[Task] = []
+        self.asset_tree : dict[int. str] = {}
 
     def load(self):
         with self.__lock:

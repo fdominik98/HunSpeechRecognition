@@ -1,5 +1,5 @@
-from pydantic_yaml import YamlModel
 from math import ceil
+from pydantic_yaml import YamlModel
 
 class Settings(YamlModel):
     chunk_size : int = 29

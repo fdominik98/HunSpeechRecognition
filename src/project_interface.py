@@ -1,16 +1,16 @@
-from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, set_appearance_mode, set_default_color_theme
 import os
+from shutil import copy
+from multiprocessing import freeze_support
+from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, set_appearance_mode, set_default_color_theme
 from managers.settings_manager import SettingsManager
 from utils.general_utils import empty, get_text, get_audio_duration
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from windows.main_window import MainWindow
-from shutil import copy
 from managers.audio_file_manager import AudioFileManager
 from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
 from managers.environment_manager import EnvironmentManager
-from multiprocessing import freeze_support
 from custom_logging.setup_logging import setup_logging
 
 freeze_support() #Preventing multiple windows in production

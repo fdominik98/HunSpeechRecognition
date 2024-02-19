@@ -1,5 +1,5 @@
-import ffmpeg
 import os
+import ffmpeg
 
 def convert_eac3_to_mp3(input_file, output_file):
     stream = ffmpeg.input(input_file)

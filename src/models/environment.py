@@ -1,7 +1,7 @@
-from pydantic_yaml import YamlModel
 import os
+from pydantic_yaml import YamlModel
 
-EXEC_MODE = 'dev'
+EXEC_MODE = 'prod'
 
 class Environment(YamlModel):
     cuda_path : str = 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3'
@@ -14,7 +14,7 @@ class Environment(YamlModel):
     ffmpeg_path : str = '[INSTALL_DIR]/deploy/ffmpeg-master-latest-win64-gpl/bin'
     ffmpeg_path2 : str = '[INSTALL_DIR]/ffmpeg-master-latest-win64-gpl/bin'
 
-    last_project_dir : str = ''
+    last_project_dir : str = '' 
     last_project_name : str = ''
     last_project_audio : str =  ''
 

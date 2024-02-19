@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
+from queue import Queue
 from threading import Lock
 from models.audio_file import AudioSource
-from queue import Queue
 
 class LoadableManager(ABC):
     def __init__(self, audio_source : AudioSource) -> None:

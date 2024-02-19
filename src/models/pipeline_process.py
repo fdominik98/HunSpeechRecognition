@@ -1,10 +1,9 @@
+from time import sleep
 from multiprocessing import Queue as ProcessQueue, Pipe, Process
-import os
-from models.task import Task
 from faster_whisper import WhisperModel
 from torch import cuda 
+from models.task import Task
 from threads.pipeline_producer_thread import PipelineProducerThread
-from time import sleep
 
 class PipelineProcess(Process):
     def __init__(self) -> None:

@@ -1,13 +1,13 @@
-from threads.speech_base_thread import SpeechBaseThread
-from managers.result_manager import ResultManager
-from multiprocessing import Queue as ProcessQueue
 import os
 from time import sleep
+from multiprocessing import Queue as ProcessQueue
 from queue import Queue as ThreadQueue
 from models.task import Task
-from models.settings import Settings
-from models.pipeline_process import PipelineProcess
 from models.segment import Segment
+from models.settings import Settings
+from threads.speech_base_thread import SpeechBaseThread
+from managers.result_manager import ResultManager
+from models.pipeline_process import PipelineProcess
 
 class PipelineManagerThread(SpeechBaseThread): 
 

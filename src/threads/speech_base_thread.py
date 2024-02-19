@@ -1,8 +1,8 @@
+import traceback
+import logging
 from threading import Thread, Event
 from abc import ABC, abstractmethod
 from models.settings import Settings
-import traceback
-import logging
 
 class SpeechBaseThread(Thread, ABC):    
     daemon = True

@@ -1,7 +1,7 @@
 import sys
-from custom_logging.stream_to_logger import StreamToLogger
 import logging
 from logging.handlers import RotatingFileHandler
+from custom_logging.stream_to_logger import StreamToLogger
 from models.environment import get_app_data_path
 
 def setup_logging():

@@ -1,10 +1,10 @@
+from abc import ABC, abstractmethod
+from typing import Optional
 from customtkinter import CTkTextbox, END, CURRENT, NONE
 from utils.fonts import textbox_font
 from managers.result_manager import ResultManager
 from managers.audio_file_manager import AudioFileManager, TrimmedAudioFileManager
 from models.audio_file import AudioFile
-from abc import ABC, abstractmethod
-from typing import Optional
 
 class InteractiveTextbox(CTkTextbox, ABC):
     def __init__(self, master, audio_load_callback, audio_play_callback, width=200, height=200):

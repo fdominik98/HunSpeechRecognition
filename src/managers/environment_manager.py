@@ -1,13 +1,13 @@
+import os
 from threading import Lock
 from models.environment import Environment
-import os
 from models.environment import get_root_path, add_to_path, get_app_data_path
 
 class EnvironmentManager():
     def __init__(self) -> None:
-       self.__file_path = f'{get_app_data_path()}/environment/environment.yaml'
-       self.__lock = Lock()
-       self.__load_environment()
+        self.__file_path = f'{get_app_data_path()}/environment/environment.yaml'
+        self.__lock = Lock()
+        self.__load_environment()
 
     def __load_environment(self):
         with self.__lock:

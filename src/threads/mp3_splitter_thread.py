@@ -1,11 +1,11 @@
-from threads.speech_base_thread import SpeechBaseThread
 import os
+from time import sleep
+from queue import Queue
+from threads.speech_base_thread import SpeechBaseThread
 from models.task import Task
 from models.settings import Settings
 from models.process_state import ProcessState
 from models.audio_file import AudioFile
-from queue import Queue
-from time import sleep
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
 from utils.general_utils import run_ffmpeg_command
 

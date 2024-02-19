@@ -1,8 +1,6 @@
 import os
-from utils.general_utils import to_timestamp_sec
-from models.result_row import ResultRow
 from enum import Enum, unique
-from typing import Optional
+from utils.general_utils import to_timestamp_sec
 
 @unique
 class AudioSource(Enum):

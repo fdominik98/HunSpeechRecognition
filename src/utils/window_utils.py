@@ -1,6 +1,6 @@
+from screeninfo import get_monitors
 from windows.message_window import MessageWindow
 from customtkinter import CTkToplevel
-from screeninfo import get_monitors
 
 def center_window(root : CTkToplevel):
     """Centers a window

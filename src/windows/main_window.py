@@ -1,4 +1,4 @@
-from customtkinter import CTkToplevel, CTkFrame, CTkTabview, CTkEntry
+from customtkinter import CTkToplevel, CTkFrame
 from models.settings import Settings
 from models.process_state import ProcessState
 from threads.mp3_splitter_thread import Mp3SplitterThread

@@ -14,3 +14,4 @@ faster-whisper==0.10.0
 tkinter-tooltip==3.0.0
 torch==2.2.0
 pyinstaller==6.4.0
+pylint==3.0.3
