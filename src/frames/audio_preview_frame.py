@@ -13,12 +13,14 @@ class AudioPreviewFrame(CTkFrame):
                  split_audio_manager : SplitAudioFileManager,
                  trimmed_audio_manager : TrimmedAudioFileManager,
                  original_audio_manager : AudioFileManager,
-                 audio_load_callback, audio_play_callback) -> None:
+                 audio_load_callback, audio_play_callback, audio_stop_callback) -> None:
         super().__init__(parent)
         self.settings : Settings = settings
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
         self.original_audio_manager : AudioFileManager = original_audio_manager
+
+        self.audio_stop_callback = audio_stop_callback
 
         self.grid(row=row, column=column, sticky='nsew')
              
@@ -84,6 +86,7 @@ class AudioPreviewFrame(CTkFrame):
     def __delete_splitted_content(self):
         response = messagebox.askyesno("Törlés", "Biztos törlöd a vágatlan szegmenseket?")
         if response:
+            self.audio_stop_callback()
             while self.split_audio_manager.size() > 0:
                 delete_index : Optional[int] = self.split_audio_manager.delete_at_index(0)
                 if delete_index == None:
@@ -93,6 +96,7 @@ class AudioPreviewFrame(CTkFrame):
     def __delete_trimmed_content(self):
         response = messagebox.askyesno("Törlés", "Biztos törlöd a vágott szegmenseket?")
         if response:
+            self.audio_stop_callback()
             while self.trimmed_audio_manager.size() > 0:
                 delete_index : Optional[int] = self.trimmed_audio_manager.delete_at_index(0)
                 if delete_index == None:

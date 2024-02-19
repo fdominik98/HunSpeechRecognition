@@ -9,10 +9,10 @@ class InitManagerThread(SpeechBaseThread):
         super().__init__('InitManagerThread', settings, error_callback)
 
         self.asset_tree_manager = AssetTreeManager(settings=settings)
-        self.result_manager = ResultManager(project_folder=self.settings.project_folder)
+        self.result_manager = ResultManager(project_folder=self.settings.project_dir)
         self.split_audio_manager = SplitAudioFileManager(self.asset_tree_manager)
         self.trimmed_audio_manager = TrimmedAudioFileManager(self.asset_tree_manager)
-        self.original_audio_manager = AudioFileManager(asset_folder=self.settings.project_folder)
+        self.original_audio_manager = AudioFileManager(asset_folder=self.settings.project_dir)
 
     def do_run(self):
         self.asset_tree_manager.load()

@@ -2,7 +2,7 @@ from customtkinter import CTkTextbox, END, CURRENT, NONE
 from utils.fonts import textbox_font
 from managers.result_manager import ResultManager
 from managers.audio_file_manager import AudioFileManager, TrimmedAudioFileManager
-from models.audio_file import TextAudioFile, AudioFile
+from models.audio_file import AudioFile
 from abc import ABC, abstractmethod
 from typing import Optional
 
@@ -23,10 +23,14 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.configure(state="disabled")
 
     def on_text_click(self, event):
-        self.tag_remove(self.selected_tag, '1.0', END)
+        self.unselect()
         current_index = self.get_current_index()
         self.tag_add(self.selected_tag, f'{current_index + 1}.0', f'{current_index + 1}.end')
         self.load_file(current_index)
+
+    def unselect(self):
+        self.tag_remove(self.selected_tag, '1.0', END)
+        self.tag_remove(self.cursor_tag, '1.0', END)
 
     @abstractmethod
     def load_file(self, index):
@@ -77,16 +81,17 @@ class AudioInteractiveTextbox(InteractiveTextbox):
 
 
 class ResultInteractiveTextbox(InteractiveTextbox):
-    def __init__(self, result_manager : ResultManager, *args, **kwargs):
+    def __init__(self, result_manager : ResultManager, trimmed_audio_manager: TrimmedAudioFileManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result_manager : ResultManager = result_manager
+        self.trimmed_audio_manager = trimmed_audio_manager
 
     def load_file(self, index):
         if index > self.result_manager.size() - 1:
             return
         result = self.result_manager.get(index)
-        audio_file = TrimmedAudioFileManager.load_file(result.chunk_file)
-        self.audio_load_callback(self.result_manager, TextAudioFile(result))
+        audio_file = self.trimmed_audio_manager.get_audio_by_result(result)
+        self.audio_load_callback(self.trimmed_audio_manager, audio_file, result)
 
     def refresh_cursor_position(self, audio_file : Optional[AudioFile], elapsed_time : float):
         self.tag_remove(self.cursor_tag, '1.0', END)

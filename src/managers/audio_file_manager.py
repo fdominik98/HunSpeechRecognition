@@ -7,6 +7,7 @@ from mutagen.id3 import ID3, COMM
 from typing import Optional
 from managers.asset_tree_manager import AssetTreeManager
 from managers.loadable_manager import LoadableManager
+from models.result_row import ResultRow
 
 
 class AudioFileManager(LoadableManager, ABC):
@@ -22,8 +23,7 @@ class AudioFileManager(LoadableManager, ABC):
                 return    
         os.makedirs(self.asset_folder)
 
-    @staticmethod
-    def load_file(file_path) -> Optional[AudioFile]:
+    def load_file(self, file_path) -> Optional[AudioFile]:
         if os.path.isfile(file_path) and str(file_path).lower().endswith('.mp3'):
             audio = MP3(file_path, ID3=ID3)
 
@@ -40,7 +40,6 @@ class AudioFileManager(LoadableManager, ABC):
             data = json.loads(serialized_data)
             return AudioFile(data["segment_number"],
                                 file_path,
-                                tuple(data["relative_timestamp"]),
                                 tuple(data["absolute_timestamp"]))
         return None
 
@@ -62,7 +61,6 @@ class AudioFileManager(LoadableManager, ABC):
             except:
                 pass
             data_to_store = json.dumps({"segment_number": audio_file.segment_number,
-                                         "relative_timestamp": audio_file.relative_timestamp,
                                          "absolute_timestamp": audio_file.absolute_timestamp})
             audio.tags.add(COMM(encoding=3, lang='eng', desc='AudioInfo', text=data_to_store))
             audio.save()
@@ -113,6 +111,26 @@ class AudioFileManager(LoadableManager, ABC):
         with self._lock:
             for audio_file in self._audio_file_list:
                 self.__do_delete_audio_file(audio_file)
+
+    def get_next(self, audio_file : AudioFile) -> Optional[AudioFile]:
+        with self._lock:
+            found_object = next((obj for obj in self._audio_file_list if obj.segment_number == audio_file.segment_number), None)
+            if found_object is not None:
+                index = self._audio_file_list.index(found_object)
+                if len(self._audio_file_list) > index + 1:
+                    return self._audio_file_list[index + 1]
+                return self._audio_file_list[-1]
+            return None
+        
+    def get_prev(self, audio_file : AudioFile) -> Optional[AudioFile]:
+        with self._lock:
+            found_object = next((obj for obj in self._audio_file_list if obj.segment_number == audio_file.segment_number), None)
+            if found_object is not None:
+                index = self._audio_file_list.index(found_object)
+                if index - 1 >= 0:
+                    return self._audio_file_list[index - 1]
+                return self._audio_file_list[0]
+            return None
         
 
 
@@ -137,3 +155,8 @@ class TrimmedAudioFileManager(AudioFileManager):
             audio_file = self.load_file(task.trim_file_path)
             if audio_file is not None:
                 self._audio_file_list.append(audio_file)
+
+    def get_audio_by_result(self, result : ResultRow) -> Optional[AudioFile]:
+        with self._lock:
+            return next((item for item in self._audio_file_list if 
+                           item.segment_number == result.chunk_id), None)

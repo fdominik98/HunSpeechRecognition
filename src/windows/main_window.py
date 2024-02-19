@@ -44,9 +44,11 @@ class MainWindow(CTkToplevel):
 
         self.result_prev_frame = ResultPreviewFrame(self.right_sidebar_frame, 0, 0, 
                                                     result_manager=self.init_manager_thread.result_manager,
+                                                    trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
                                                     audio_load_callback=self.audio_player_frame.load,
                                                     audio_play_callback=self.audio_player_frame.play)
         self.audio_player_frame.refresh_cursor_position = self.result_prev_frame.textbox.refresh_cursor_position
+        self.audio_player_frame.unselect_result_preview = self.result_prev_frame.textbox.unselect
         
                     
 
@@ -64,7 +66,10 @@ class MainWindow(CTkToplevel):
                                                      trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
                                                      original_audio_manager=self.init_manager_thread.original_audio_manager,
                                                      audio_load_callback=self.audio_player_frame.load,
-                                                     audio_play_callback=self.audio_player_frame.play)   
+                                                     audio_play_callback=self.audio_player_frame.play,
+                                                    audio_stop_callback=self.audio_player_frame.stop)  
+        self.audio_player_frame.unselect_splitting_textbox = self.audio_preview_frame.split_textbox.unselect 
+        self.audio_player_frame.unselect_trimming_textbox = self.audio_preview_frame.trim_textbox.unselect
 
                                                      
                                                                 
@@ -148,7 +153,8 @@ class MainWindow(CTkToplevel):
                                         error_callback=self.error_callback,
                                         input_queue=self.splitter_thread.output_queue,
                                         split_audio_manager=self.init_manager_thread.split_audio_manager,
-                                        trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager)
+                                        trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
+                                        audio_stop_callback=self.audio_player_frame.stop_if_loaded)
         self.trimmer_thread.start()
 
     def start_pipeline_manager_thread(self):

@@ -14,6 +14,10 @@ class Environment(YamlModel):
     ffmpeg_path : str = '[INSTALL_DIR]/deploy/ffmpeg-master-latest-win64-gpl/bin'
     ffmpeg_path2 : str = '[INSTALL_DIR]/ffmpeg-master-latest-win64-gpl/bin'
 
+    last_project_dir : str = ''
+    last_project_name : str = ''
+    last_project_audio : str =  ''
+
 def get_root_path() -> str:
     try:
         if EXEC_MODE == 'dev':
@@ -24,6 +28,19 @@ def get_root_path() -> str:
             raise Exception('Hibás futtátasi mód. (Environment.py)')
     except:
         raise Exception('A gyökér könyvtár nem található. Ellenőrizd a környezeti változókat.')
+
+def get_app_data_path() -> str:
+    try:
+        if EXEC_MODE == 'dev':
+            return os.environ['HUNSPEECH_DEV_PATH']
+        elif EXEC_MODE == 'prod':
+            appname = os.path.basename(os.environ['HUNSPEECH_PATH'])
+            appdata = os.environ['APPDATA']
+            return f'{appdata}/{appname}'
+        else:
+            raise Exception('Hibás futtátasi mód. (Environment.py)')
+    except:
+        raise Exception('A roaming data könyvtár nem található. Ellenőrizd a környezeti változókat.')
     
 def add_to_path(path : str):
     current_path = os.environ.get('PATH', '')

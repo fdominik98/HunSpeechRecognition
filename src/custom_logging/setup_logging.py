@@ -2,7 +2,7 @@ import sys
 from custom_logging.stream_to_logger import StreamToLogger
 import logging
 from logging.handlers import RotatingFileHandler
-from models.environment import get_root_path
+from models.environment import get_app_data_path
 
 def setup_logging():
     logger = logging.getLogger()
@@ -13,7 +13,7 @@ def setup_logging():
         logger.handlers.pop()
 
     # Create a file handler that overwrites the log file on startup
-    file_handler = RotatingFileHandler(f'{get_root_path()}/log/output.log', maxBytes=5 * 1024 * 1024, mode='a')
+    file_handler = RotatingFileHandler(f'{get_app_data_path()}/log/output.log', maxBytes=5 * 1024 * 1024, mode='a')
     file_handler.setLevel(logging.DEBUG)
 
     # Optionally, add a console handler

@@ -2,6 +2,7 @@ import os
 from utils.general_utils import to_timestamp_sec
 from models.result_row import ResultRow
 from enum import Enum, unique
+from typing import Optional
 
 @unique
 class AudioSource(Enum):
@@ -11,18 +12,19 @@ class AudioSource(Enum):
     TRIMLIST = 'Vágott szegmensek'
 
 class AudioFile():
-    def __init__(self, segment_number : int, file_path : str, relative_timestamp : tuple[float, float], absolute_timestamp : tuple[float, float]) -> None:
+    def __init__(self, segment_number : int, file_path : str, absolute_timestamp : tuple[float, float]) -> None:
         self.segment_number = segment_number
         self.file_path = file_path
-        self.relative_timestamp = relative_timestamp
         self.absolute_timestamp = absolute_timestamp
 
     def __str__(self) -> str:
-        return f'{os.path.basename(self.file_path)} {to_timestamp_sec(self.relative_timestamp[0])}-{to_timestamp_sec(self.relative_timestamp[1])}'
+        return f'{os.path.basename(self.file_path)} {to_timestamp_sec(self.absolute_timestamp[0])}-{to_timestamp_sec(self.absolute_timestamp[1])}'
     
     def exists(self) -> bool:
          return os.path.exists(self.file_path)
 
-class TextAudioFile(AudioFile):
-    def __init__(self, result : ResultRow) -> None:
-        super().__init__(result.chunk_id, result.chunk_file, result.relative_timestamp, result.absolute_timestamp)
+    def length(self) -> float:
+        return self.absolute_timestamp[1] - self.absolute_timestamp[0]
+    
+
+

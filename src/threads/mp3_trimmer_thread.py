@@ -12,12 +12,13 @@ from utils.general_utils import run_ffmpeg_command
 
 class Mp3TrimmerThread(SpeechBaseThread): 
     def __init__(self, settings : Settings, error_callback,
-                  input_queue, split_audio_manager, trimmed_audio_manager):
+                  input_queue, split_audio_manager, trimmed_audio_manager, audio_stop_callback):
         super().__init__('Mp3TrimmerThread', settings, error_callback)
         self.input_queue : Queue = input_queue
         self.output_queue : Queue = Queue()
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
+        self.audio_stop_callback = audio_stop_callback
 
     def do_run(self):
         while not self.stopped():
@@ -44,11 +45,11 @@ class Mp3TrimmerThread(SpeechBaseThread):
 
         audiofile = AudioFile(segment_number=task.segment_number,
                                file_path=task.trim_file_path,
-                               relative_timestamp=task.trim_timestamp,
-                               absolute_timestamp=task.split_timestamp)
+                               absolute_timestamp=task.trim_timestamp)
         
         if self.trimmed_audio_manager.save_audio_file(audiofile):
             try:
+                self.audio_stop_callback(audiofile)
                 delete_index = self.split_audio_manager.delete_audio_file(audiofile)
             except Exception as e:
                 self.trimmed_audio_manager.delete_audio_file(audiofile)

@@ -19,8 +19,8 @@ class Mp3SplitterThread(SpeechBaseThread):
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
 
     def do_run(self):
-        if not os.path.exists(self.settings.mp3_file):
-            print(f"File {self.settings.mp3_file} not found.")
+        if not os.path.exists(self.settings.project_audio_path):
+            print(f"File {self.settings.project_audio_path} not found.")
             return
         
         while not self.stopped():
@@ -35,7 +35,7 @@ class Mp3SplitterThread(SpeechBaseThread):
         if not os.path.exists(task.split_file_path) and not os.path.exists(task.trim_file_path):
             command = [
                 'ffmpeg',
-                '-i', self.settings.mp3_file,
+                '-i', self.settings.project_audio_path,
                 '-ss', str(task.split_timestamp[0]),
                 '-t', str(task.split_timestamp[1] - task.split_timestamp[0]),
                 '-acodec', 'copy',
@@ -45,7 +45,7 @@ class Mp3SplitterThread(SpeechBaseThread):
             print(f'{task.split_file_path} split successfully.') 
 
             split_audio_file = AudioFile(segment_number=task.segment_number, file_path=task.split_file_path,
-                                        relative_timestamp=task.split_timestamp, absolute_timestamp=task.split_timestamp)
+                                          absolute_timestamp=task.split_timestamp)
 
             if self.split_audio_manager.save_audio_file(split_audio_file):
                 self.split_audio_manager.insert_widget_queue.put(split_audio_file)

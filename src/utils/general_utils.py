@@ -94,6 +94,10 @@ def run_ffmpeg_command(command):
     output, error = process.communicate()
     return output, error
 
+def timestamp_str(timestamp: tuple[float, float]) -> str:
+    return f'{to_timestamp_sec(timestamp[1])} - {to_timestamp_sec(timestamp[0])}'
+
+
 
 
 

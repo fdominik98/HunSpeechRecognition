@@ -31,37 +31,44 @@ class ProjectInterface(CTk):
         self.title("Beszéd Felismerés Prototípus")
         self.geometry("500x720")
         center_window(self)
+
+        try:
+            self.environment_manager = EnvironmentManager()
+        except Exception as e:
+            open_message(self, 'hiba', e)
+            self.message_window.protocol("WM_DELETE_WINDOW", self.destroy)
         
         self.side_bar = CTkFrame(self, corner_radius=0)
         self.side_bar.grid(row=0, column=0, padx=(5,0), sticky="nsew")
         self.side_bar.grid_columnconfigure(0, weight=1)  
 
+        self.project_folder_label = CTkLabel(self.side_bar, text="Projekt mappa:", height=10, font=label_font())
+        self.project_folder_label.grid(row=0, column=0, padx=20, pady=(40,0), sticky='sw')
+        self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
+        self.project_folder_textbox.grid(row=1, column=0, padx=20, pady=(10,0), sticky='nsew')
+        self.project_folder_textbox.insert("0.0", self.environment_manager.get_last_project_dir())
+        self.project_folder_textbox.configure(state="disabled")
+
+        self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
+
+
         self.project_name_label = CTkLabel(self.side_bar, text="Project neve:", height=10, font=label_font())
-        self.project_name_label.grid(row=0, column=0, padx=20, pady=(40,0), sticky='nsew')
+        self.project_name_label.grid(row=2, column=0, padx=20, pady=(40,0), sticky='nsew')
         self.project_name_textbox = CTkTextbox(self.side_bar, height=30, wrap='word')
-        self.project_name_textbox.grid(row=1, column=0, padx=40, pady=(10,0), sticky='nsew')
-        self.project_name_textbox.insert("0.0", '')
-        self.__center_pname_textbox()
+        self.project_name_textbox.grid(row=3, column=0, padx=40, pady=(10,0), sticky='nsew')
+        self.__set_project_name(self.environment_manager.get_last_project_name())
         self.project_name_textbox.bind("<Key>", lambda e: self.__center_pname_textbox())
 
 
         self.input_file_label = CTkLabel(self.side_bar, text="Hangfájl:", height=10, font=label_font())
-        self.input_file_label.grid(row=2, column=0, padx=20, pady=(40,0), sticky='sw')
+        self.input_file_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
         self.input_file_textbox = CTkTextbox(self.side_bar, height=30, wrap='word')
-        self.input_file_textbox.grid(row=3, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.input_file_textbox.insert("0.0", '')
+        self.input_file_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
+        self.input_file_textbox.insert("0.0", self.environment_manager.get_last_project_audio())
         self.input_file_textbox.configure(state="disabled")
        
         self.__bind_textbox_click(self.input_file_textbox, self.__browse_input_file)
         
-        self.project_folder_label = CTkLabel(self.side_bar, text="Projekt mappa:", height=10, font=label_font())
-        self.project_folder_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
-        self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
-        self.project_folder_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.project_folder_textbox.insert("0.0", 'C:/Users/freyd/Desktop/HunSpeechRecognition/testing/PROBA')
-        self.project_folder_textbox.configure(state="disabled")
-
-        self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
 
 
         self.load_project_button = CTkButton(self.side_bar, command=self.__load_project, text="Project betöltése", font=button_font())
@@ -72,12 +79,6 @@ class ProjectInterface(CTk):
 
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
-
-        try:
-            EnvironmentManager()
-        except Exception as e:
-            open_message(self, 'hiba', e)
-            self.message_window.protocol("WM_DELETE_WINDOW", self.destroy)
             
 
         self.pipeline_process = PipelineProcess()
@@ -90,19 +91,41 @@ class ProjectInterface(CTk):
 
 
     def __browse_input_file(self, e):
-        filename = filedialog.askopenfilename(filetypes=(("MP3 files", "*.mp3"),))
-        self.input_file_textbox.configure(state="normal")
-        self.input_file_textbox.delete("0.0", "end")
-        self.input_file_textbox.insert("0.0", filename)
-        self.input_file_textbox.configure(state="disabled")
+        file_path = filedialog.askopenfilename(filetypes=(("MP3 files", "*.mp3"),))
+        self.__set_input_file(file_path)
 
        
     def __browse_project_folder(self, e):
         directory = filedialog.askdirectory()
+        if self.__is_project(directory):
+            settings_manager = SettingsManager(directory)
+            self.__set_project_name(settings_manager.get().project_name)
+            self.__set_input_file(settings_manager.get().project_audio_path)
+            self.project_name_textbox.configure(state="disabled")
+        else:
+            self.__set_project_name('')
+            self.__set_input_file('')
+
+        self.__set_project_folder(directory)
+
+
+    def __set_input_file(self, path : str):
+        self.input_file_textbox.configure(state="normal")
+        self.input_file_textbox.delete("0.0", "end")
+        self.input_file_textbox.insert("0.0", path)
+        self.input_file_textbox.configure(state="disabled")
+
+    def __set_project_folder(self, path : str):
         self.project_folder_textbox.configure(state="normal")
         self.project_folder_textbox.delete("0.0", 'end')
-        self.project_folder_textbox.insert("0.0", directory) 
+        self.project_folder_textbox.insert("0.0", path) 
         self.project_folder_textbox.configure(state="disabled")
+
+    def __set_project_name(self, name: str):
+        self.project_name_textbox.configure(state="normal")
+        self.project_name_textbox.delete("0.0", 'end')
+        self.project_name_textbox.insert("0.0", name) 
+        self.__center_pname_textbox()
 
     def __bind_textbox_click(self, textbox : CTkTextbox, callback):
         textbox.bind("<Button-1>", command=callback)
@@ -115,10 +138,12 @@ class ProjectInterface(CTk):
     def __unhighlight_textbox(self, textbox : CTkTextbox):
         textbox.configure(cursor="arrow")
 
+    def __is_project(self, path : str):
+        return os.path.exists(f'{path}/.audiorecproj')
 
     def __create_project(self):
         project_name = get_text(self.project_name_textbox)
-        project_folder = get_text(self.project_folder_textbox)
+        project_base_folder = get_text(self.project_folder_textbox)
         input_file = get_text(self.input_file_textbox)
 
         if empty(project_name):
@@ -128,32 +153,40 @@ class ProjectInterface(CTk):
             open_message(self, 'hiba', 'Tölts be egy hangfájlt!')
             return
         
-        directory = f'{project_folder}/{project_name}'
-        if os.path.exists(directory):
+        project_dir = f'{project_base_folder}/{project_name}'
+        if os.path.exists(project_dir):
             open_message(self, 'hiba', 'A projekt már létezik ebben a mappában.')
             return
         
-        if not os.path.exists(f'{project_folder}/.audiorecproj'):
+        if self.__is_project(project_base_folder):
             open_message(self, 'hiba', 'A projekt nem hozható létre egy másik projekt mappában.')
             return
         
-        os.makedirs(directory)
+        os.makedirs(project_dir)
 
-        audio_manager = AudioFileManager(directory)
-        mp3_file = f'{directory}/audio.mp3'
-        copy(input_file, mp3_file)
-        mp3_duration = get_audio_duration(mp3_file) 
-        audio_manager.save_audio_file(AudioFile(0, mp3_file, (0, mp3_duration), (0, mp3_duration)))
+        audio_manager = AudioFileManager(project_dir)
+        input_file_name = os.path.basename(input_file)
+        project_audio_path = f'{project_dir}/{input_file_name}'
+        copy(input_file, project_audio_path)
+        project_audio_duration = get_audio_duration(project_audio_path) 
+        audio_manager.save_audio_file(AudioFile(0, project_audio_path, (0, project_audio_duration)))
 
 
-        with open(f'{directory}/.audiorecproj', 'w') as file:
+        with open(f'{project_dir}/.audiorecproj', 'w') as file:
             file.write('')
 
-        settings_manager = SettingsManager(directory)
-        settings_manager.get().project_folder = directory
-        settings_manager.get().mp3_file = mp3_file
-        settings_manager.get().mp3_duration = mp3_duration
+        settings_manager = SettingsManager(project_dir)
+        settings_manager.get().project_dir = project_dir
+        settings_manager.get().project_audio_path = project_audio_path
+        settings_manager.get().project_audio_duration = project_audio_duration
+        settings_manager.get().project_audio_name = input_file_name
+        settings_manager.get().project_name = project_name
         settings_manager.save_settings()
+
+        self.environment_manager.set_last_project_dir(project_dir)
+        self.environment_manager.set_last_project_name(project_name)
+        self.environment_manager.set_last_project_audio(project_audio_path)
+        self.environment_manager.save_environment()
 
         self.__open_main_application(settings_manager)
 
@@ -165,6 +198,11 @@ class ProjectInterface(CTk):
             open_message(self, 'hiba', 'A projekt nem található.')
             return
         settings_manager = SettingsManager(directory)
+
+        self.environment_manager.set_last_project_dir(settings_manager.get().project_dir)
+        self.environment_manager.set_last_project_name(settings_manager.get().project_name)
+        self.environment_manager.set_last_project_audio(settings_manager.get().project_audio_path)
+        self.environment_manager.save_environment()
 
         self.__open_main_application(settings_manager)
 

@@ -3,12 +3,14 @@ from math import ceil
 
 class Settings(YamlModel):
     chunk_size : int = 29
-    mp3_file : str = ''
-    mp3_duration : float = 0
+    project_audio_path : str = ''
+    project_audio_duration : float = 0
     noise_treshold : int = -60
     silence_dur : float = 0.5
-    project_folder : str = ''
+    project_dir : str = ''
+    project_name : str = ''
+    project_audio_name : str = ''
 
     def chunk_count(self):
-        result = self.mp3_duration / self.chunk_size
+        result = self.project_audio_duration / self.chunk_size
         return ceil(result)

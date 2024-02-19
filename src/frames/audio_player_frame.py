@@ -2,7 +2,8 @@ from customtkinter import CTkFrame, CTkButton, CTkSlider, CTkTextbox, CTkLabel, 
 import pygame
 from mutagen.mp3 import MP3
 import time
-from utils.general_utils import to_timestamp_sec
+from models.result_row import ResultRow
+from utils.general_utils import to_timestamp_sec, timestamp_str
 from models.environment import get_root_path
 from utils.fonts import label_font, button_font, textbox_font
 import tktooltip
@@ -10,12 +11,15 @@ from PIL import Image
 import os
 from models.audio_file import AudioFile, AudioSource
 from typing import Optional
-from managers.loadable_manager import LoadableManager
+from managers.audio_file_manager import AudioFileManager
 
 class AudioPlayerFrame(CTkFrame):
     def __init__(self, parent : CTkFrame, row, column):
         super().__init__(parent, height=80)
         self.refresh_cursor_position = None
+        self.unselect_trimming_textbox = None
+        self.unselect_splitting_textbox = None
+        self.unselect_result_preview = None
 
         pygame.init()
         pygame.mixer.init()
@@ -23,8 +27,7 @@ class AudioPlayerFrame(CTkFrame):
         self.is_playing : bool = False
         self.start_time : Optional[float] = None
         self.audio_file : Optional[AudioFile] = None
-        self.file_manager : Optional[LoadableManager] = None 
-        self.duration : int = 0
+        self.file_manager : Optional[AudioFileManager] = None 
 
         image_base_path = f'{get_root_path()}/images'
         self.play_icon = CTkImage(Image.open(f'{image_base_path}/play.png'), size=(25, 25))
@@ -34,7 +37,7 @@ class AudioPlayerFrame(CTkFrame):
         self.previous_icon = CTkImage(Image.open(f'{image_base_path}/previous.png'), size=(25, 25))
         self.speaker_icon = CTkImage(Image.open(f'{image_base_path}/speaker.png'), size=(20, 20))
 
-        self.grid(row=row, column=column, pady=5, sticky="ewsn")
+        self.grid(row=row, column=column, pady=5, sticky="ews")
 
         self.previous_button = CTkButton(self, text="", command=self.previous, font=button_font(), image=self.previous_icon, corner_radius=40, width=80)
         self.previous_button.grid(row=0, padx=(50, 2), pady=(25, 0), column=0)
@@ -90,10 +93,16 @@ class AudioPlayerFrame(CTkFrame):
 
         self.grid_columnconfigure(5, weight=1)
 
+    def is_init(self):
+        return self.refresh_cursor_position and self.unselect_result_preview and self.unselect_splitting_textbox and self.unselect_trimming_textbox
+
 
     def on_nav_slider_hover(self, event):
+        if not self.loaded():
+            self.nav_slider_preview = 0
+            return 
         relative_position = event.x / self.navigation_slider.winfo_width()
-        self.nav_slider_preview = self.duration * relative_position
+        self.nav_slider_preview = self.audio_file.length() * relative_position
 
     def on_volume_slider_hover(self, event):
         relative_position = 1 - (event.y / self.volume_slider.winfo_height())
@@ -101,13 +110,24 @@ class AudioPlayerFrame(CTkFrame):
 
 
     def previous(self):
+        if not self.loaded() or not self.is_init():
+            return
+        
+        manager = self.file_manager
+        audio_file = self.file_manager.get_prev(self.audio_file)
         self.stop()
-        print('Not implemented!')
-        pass
+        if audio_file is not None:
+            self.load(manager, audio_file)
+
     def next(self):
+        if not self.loaded() or not self.is_init():
+            return
+        
+        manager = self.file_manager
+        audio_file = self.file_manager.get_next(self.audio_file)
         self.stop()
-        print('Not implemented!')
-        pass
+        if audio_file is not None:
+            self.load(manager, audio_file)
 
     def get_nav_slider_preview(self):
         return to_timestamp_sec(self.nav_slider_preview)
@@ -116,14 +136,14 @@ class AudioPlayerFrame(CTkFrame):
         return int(round(self.volume_slider_preview))
 
     def play(self):
-        if not self.loaded() :
+        if not self.loaded() or not self.is_init():
             return
         if self.navigation_slider.get() == 100:
             self.pause()
             return
-        pygame.mixer.music.play(start=self.navigation_slider.get() * self.duration / 100)
+        pygame.mixer.music.play(start=self.navigation_slider.get() * self.audio_file.length() / 100)
         self.is_playing = True
-        self.start_time = time.time() - self.navigation_slider.get() * self.duration / 100
+        self.start_time = time.time() - self.navigation_slider.get() * self.audio_file.length() / 100
         self.update_slider_position()
         self.play_button.configure(image=self.pause_icon, command=self.pause)
 
@@ -135,8 +155,11 @@ class AudioPlayerFrame(CTkFrame):
         self.play_button.configure(image=self.play_icon, command=self.play)
 
     def stop(self):
-        if not self.loaded() :
+        if not self.loaded() or not self.is_init():
             return
+        self.unselect_trimming_textbox()
+        self.unselect_splitting_textbox()
+        self.unselect_result_preview()
         pygame.mixer.music.stop()
         self.is_playing = False
         self.navigation_slider.set(0)
@@ -152,6 +175,10 @@ class AudioPlayerFrame(CTkFrame):
 
         self.play_button.configure(image=self.play_icon, command=self.play)
 
+    def stop_if_loaded(self, audio_file : AudioFile):
+        if self.audio_file and self.file_manager and self.file_manager.audio_source == AudioSource.SPLITLIST and audio_file.segment_number == self.audio_file.segment_number:
+            self.stop()
+
     def adjust_volume(self, volume):
         pygame.mixer.music.set_volume(float(volume) / 100)
         self.min_volume_label.configure(text=int(round(volume)))
@@ -160,35 +187,32 @@ class AudioPlayerFrame(CTkFrame):
         if not self.loaded() :
             return
         
-        timestamp = float(val) * self.duration / 100
+        timestamp = float(val) * self.audio_file.length() / 100
         if pygame.mixer.music.get_busy():
             self.start_time = time.time() - timestamp  
             pygame.mixer.music.play(start=timestamp)
             if val == 100:
                 self.pause()
 
-    def update_duration(self):
-        audio = MP3(self.audio_file.file_path)
-        self.duration = audio.info.length
-        self.end_time_label.configure(text=to_timestamp_sec(self.duration)) 
-
     def update_slider_position(self):
-        if not self.winfo_exists():
+        if not self.winfo_exists() or not self.is_init():
             return
         
         elapsed_time = time.time() - self.start_time
-        if self.refresh_cursor_position:
-            self.refresh_cursor_position(self.audio_file, elapsed_time)
+        self.refresh_cursor_position(self.audio_file, elapsed_time)
 
         if self.is_playing:
-            self.navigation_slider.set(elapsed_time / self.duration * 100)
+            self.navigation_slider.set(elapsed_time / self.audio_file.length() * 100)
             self.start_time_label.configure(text=to_timestamp_sec(elapsed_time))
-            if elapsed_time >= self.duration:
+            if elapsed_time >= self.audio_file.length():
                 self.pause()
                 return
             self.after(50, self.update_slider_position)
 
-    def load(self, file_manager : LoadableManager, audio_file : Optional[AudioFile]):
+    def load(self, file_manager : AudioFileManager, audio_file : Optional[AudioFile], result : Optional[ResultRow] = None):
+        if not self.is_init():
+            return
+        
         if audio_file is None or not audio_file.exists():
             self.stop()
             return
@@ -198,26 +222,27 @@ class AudioPlayerFrame(CTkFrame):
         self.file_manager = file_manager
         pygame.mixer.music.load(audio_file.file_path)
 
-        if self.file_manager.audio_source == AudioSource.PREVIEWTEXT:
-            start_time = audio_file.relative_timestamp[0]
+        if result is not None:
+            start_time = result.relative_timestamp[0]
         else:
             start_time = 0
 
-        self.update_duration()
-        self.navigation_slider.set(start_time / self.duration * 100)
+        self.navigation_slider.set(start_time / self.audio_file.length() * 100)
         self.navigate(start_time)
-        if self.refresh_cursor_position:
-            self.refresh_cursor_position(self.audio_file, start_time)
+        self.end_time_label.configure(text=to_timestamp_sec(self.audio_file.length())) 
+        self.refresh_cursor_position(self.audio_file, start_time)
 
         self.audio_info_textbox.configure(state='normal')
         self.audio_info_textbox.delete("1.0", END)
         self.audio_info_textbox.insert(END, f'- Forrás: {self.file_manager.audio_source.value}\n')
         self.audio_info_textbox.insert(END, f'- Fájl: {os.path.basename(audio_file.file_path)}\n')
         self.audio_info_textbox.insert(END, f'- Útvonal: {audio_file.file_path}\n')
-        timestamp_str =f'{to_timestamp_sec(audio_file.absolute_timestamp[0])} - {to_timestamp_sec(audio_file.absolute_timestamp[1])}'
-        self.audio_info_textbox.insert(END, f'- Szegmens pozíció: {timestamp_str}\n')
-        self.audio_info_textbox.configure(state='disabled')
+        self.audio_info_textbox.insert(END, f'- Szegmens pozíció: {timestamp_str(audio_file.absolute_timestamp)}\n')
 
+        if result is not None:
+            self.audio_info_textbox.insert(END, f'\n- Szöveg pozíció: {timestamp_str(result.absolute_timestamp)}\n')
+
+        self.audio_info_textbox.configure(state='disabled')
         self.play_button.configure(image=self.play_icon, command=self.play)
 
 

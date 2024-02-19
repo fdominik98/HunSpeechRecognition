@@ -1,11 +1,11 @@
 from threading import Lock
 from models.environment import Environment
 import os
-from models.environment import get_root_path, add_to_path
+from models.environment import get_root_path, add_to_path, get_app_data_path
 
 class EnvironmentManager():
     def __init__(self) -> None:
-       self.__file_path = f'{get_root_path()}/dependencies/environment.yaml'
+       self.__file_path = f'{get_app_data_path()}/environment/environment.yaml'
        self.__lock = Lock()
        self.__load_environment()
 
@@ -34,8 +34,32 @@ class EnvironmentManager():
 
                     
 
-    def save_settings(self) -> None:
+    def save_environment(self) -> None:
         with self.__lock:
             with open(self.__file_path, 'w') as file:
                 file.write(self.__environment.yaml())
+
+    def get_last_project_dir(self) -> str:
+        with self.__lock:
+            return self.__environment.last_project_dir
+
+    def set_last_project_dir(self, data : str):
+        with self.__lock:
+            self.__environment.last_project_dir = data
+
+    def get_last_project_name(self) -> str:
+        with self.__lock:
+            return self.__environment.last_project_name
+
+    def set_last_project_name(self, data : str):
+        with self.__lock:
+            self.__environment.last_project_name = data
+
+    def get_last_project_audio(self) -> str:
+        with self.__lock:
+            return self.__environment.last_project_audio
+
+    def set_last_project_audio(self, data : str):
+        with self.__lock:
+            self.__environment.last_project_audio = data
 

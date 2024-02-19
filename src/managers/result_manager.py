@@ -30,8 +30,7 @@ class ResultManager(LoadableManager):
             if len(segment.text) == 0:
                 continue
             result = ResultRow(self.size(), task.segment_number, task.trim_file_path, (segment.start, segment.end),
-                    (task.trim_timestamp[0] + segment.start, task.trim_timestamp[0] + segment.end),
-                        segment.text.strip(), self.__get_sentence_pos(segment.text.strip()))
+                    (task.trim_timestamp[0] + segment.start, task.trim_timestamp[0] + segment.end), segment.text.strip())
             self.__result_list.append(result)
             new_results.append(result)
         
@@ -72,21 +71,10 @@ class ResultManager(LoadableManager):
             return len(self.__result_list)
         
 
-    def __get_sentence_pos(self, text : str) -> tuple[int, int]:
-        with self._lock:
-            start_pos = 0
-            if not len(self.__result_list) == 0 :
-                start_pos = self.__result_list[-1].sentence_pos[1] + 2
-            end_pos = start_pos + len(text) - 1
-            return (start_pos, end_pos)
-
     def get_result_by_audio(self, audio_file: AudioFile, elapsed_time : float) -> Optional[ResultRow]:
         with self._lock:
-            result = next((item for item in self.__result_list if 
+            return next((item for item in self.__result_list if 
                            item.chunk_id == audio_file.segment_number and
                            item.chunk_file == audio_file.file_path and 
                            item.relative_timestamp[0] <= elapsed_time and
                            item.relative_timestamp[1] > elapsed_time), None)
-            if result is not None:
-                return result
-            return None

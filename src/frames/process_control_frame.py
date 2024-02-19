@@ -17,7 +17,7 @@ class ProcessControlFrame(CTkFrame):
 
         self.process_state : ProcessState = ProcessState.STOPPED
 
-        self.grid(row=row, column=column, sticky="ewsn", pady=20)
+        self.grid(row=row, column=column, sticky="ews", pady=20)
 
         self.small_progressbar = CTkProgressBar(self, orientation="horizontal", width=350, height=5, corner_radius=0, determinate_speed=2.5)
         self.small_progressbar.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="wse")        

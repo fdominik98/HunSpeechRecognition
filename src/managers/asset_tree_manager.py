@@ -8,7 +8,7 @@ from models.process_state import ProcessState
 class AssetTreeManager():
     def __init__(self, settings : Settings) -> None:
         self.settings = settings
-        self.assets_folder = f'{settings.project_folder}/assets'
+        self.assets_folder = f'{settings.project_dir}/assets'
         self.split_folder = f'{self.assets_folder}/split'
         self.trim_folder = f'{self.assets_folder}/trim'
         self.asset_tree_file = f'{self.assets_folder}/asset_tree.json'
@@ -69,7 +69,7 @@ class AssetTreeManager():
         self.__task_list = []
         for segment_id, path in sorted_asset_tree:
             start = segment_id * self.settings.chunk_size
-            split_timestamp = (float(start), float(min(start + self.settings.chunk_size, self.settings.mp3_duration)))
+            split_timestamp = (float(start), float(min(start + self.settings.chunk_size, self.settings.project_audio_duration)))
 
             split_file_path = f'{self.split_folder}/{path}'
             split_file_dir = os.path.dirname(split_file_path)
@@ -82,7 +82,7 @@ class AssetTreeManager():
 
             task : Task = Task(process_state=ProcessState.STOPPED,
                                segment_number = segment_id,
-                               main_file_path=self.settings.mp3_file,
+                               main_file_path=self.settings.project_audio_path,
                                split_timestamp = split_timestamp, 
                                trim_timestamp = split_timestamp,
                                trim_file_path=trim_file_path,
