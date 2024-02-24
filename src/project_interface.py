@@ -7,16 +7,17 @@ from utils.general_utils import empty, get_text, get_audio_duration
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from windows.main_window import MainWindow
-from managers.audio_file_manager import AudioFileManager
+from managers.audio_file_manager import MainAudioManager
 from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
 from managers.environment_manager import EnvironmentManager
+from models.environment import get_images_path
 from custom_logging.setup_logging import setup_logging
 
-freeze_support() #Preventing multiple windows in production
+freeze_support() # Preventing multiple windows in production
 
-set_appearance_mode("Dark")  # Modes: "System" (standard), "Dark", "Light"
-set_default_color_theme("green")  # Themes: "blue" (standard), "green", "dark-blue"
+set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
+set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
 
 setup_logging()
 
@@ -28,9 +29,9 @@ class ProjectInterface(CTk):
         self.main_app_window = None
 
         # configure window
-        self.title("Beszéd Felismerés Prototípus")
-        self.geometry("500x720")
-        center_window(self)
+        center_window(self, 500, 500)
+        self.title("Transzkriptor Prototípus")
+        self.iconbitmap(default=f'{get_images_path()}/icon.ico')        
 
         try:
             self.environment_manager = EnvironmentManager()
@@ -164,9 +165,9 @@ class ProjectInterface(CTk):
         
         os.makedirs(project_dir)
 
-        audio_manager = AudioFileManager(project_dir)
         input_file_name = os.path.basename(input_file)
         project_audio_path = f'{project_dir}/{input_file_name}'
+        audio_manager = MainAudioManager(project_audio_path)
         copy(input_file, project_audio_path)
         project_audio_duration = get_audio_duration(project_audio_path) 
         audio_manager.save_audio_file(AudioFile(0, project_audio_path, (0, project_audio_duration)))
@@ -209,7 +210,7 @@ class ProjectInterface(CTk):
 
     def __open_main_application(self, settings_manager : SettingsManager):
         self.withdraw()
-        self.main_app_window = MainWindow(settings_manager.get(), self.pipeline_process)        
+        self.main_app_window = MainWindow(self, settings_manager.get(), self.pipeline_process)        
         # When the main application is closed, end the program
         self.main_app_window.protocol("WM_DELETE_WINDOW", lambda settings_manager=settings_manager: self.on_closing(settings_manager))
 
@@ -222,6 +223,11 @@ class ProjectInterface(CTk):
         self.main_app_window.destroy()
 
 
-if __name__ == "__main__":
+
+def main():
     app = ProjectInterface()
     app.mainloop()
+    
+if __name__ == "__main__":
+    main()
+

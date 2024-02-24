@@ -1,0 +1,54 @@
+from models.settings import Settings
+from models.audio_file import AudioFile
+from threads.speech_base_thread import SpeechBaseThread
+from matplotlib.figure import Figure
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from customtkinter import BOTH, TOP, CTkToplevel
+from models.audio_file import AudioFile
+from managers.audio_file_manager import AudioFileManager
+from custom_pydub.custom_audio_segment import AudioSegment
+
+class PlotManagerThread(SpeechBaseThread): 
+    def __init__(self, master : CTkToplevel, audio_manager : AudioFileManager,  audio_file : AudioFile):
+        super().__init__('PlotManagerThread', Settings(), self.on_error)
+        self.master = master
+        self.audio_manager = audio_manager
+        self.audio_file = audio_file
+
+    def do_run(self):
+        self.audio_file = self.audio_manager.get_by_path(self.audio_file.file_path)
+        if self.audio_file is None or self.audio_file.length() > 60:
+            return
+
+        audio = AudioSegment.from_mp3(self.audio_file.file_path)
+
+        samples_float = np.array(audio.get_array_of_samples()).astype(np.float32)
+        normalized_samples = samples_float / (2**(audio.sample_width * 8 - 1) - 1)
+        normalized_samples[normalized_samples == 0] = np.finfo(float).eps
+        samples_dBFS = 20 * np.log10(np.abs(normalized_samples))
+        clipped_samples_dBFS = np.clip(samples_dBFS, -50, 0)
+        times = np.arange(len(clipped_samples_dBFS)) / float(audio.frame_rate)
+
+        # Create a Matplotlib figure and axes
+        fig = Figure(figsize=(15, 4), dpi=100)
+        ax = fig.add_subplot(111)
+        ax.plot(times, clipped_samples_dBFS)
+        ax.set_title('Audio Amplitúdó idő szerint (dBFS)')
+        ax.set_ylabel('Amplitúdó (dBFS)')
+        ax.set_xlabel('Idő (másodperc)')
+        ax.set_xticks(np.arange(0, times[-1], 2))
+        ax.set_xlim([0, times[-1]])
+        ax.grid(True)
+
+        # Embed the figure in the Tkinter window
+        canvas = FigureCanvasTkAgg(fig, master=self.master)  # A tk.DrawingArea.
+        canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1, pady=(15, 15))
+        canvas.draw()
+
+
+    def on_error(self, name):
+        pass
+
+
+    

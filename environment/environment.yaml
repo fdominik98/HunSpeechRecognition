@@ -9,4 +9,4 @@ ffmpeg_path: '[INSTALL_DIR]/deploy/ffmpeg-master-latest-win64-gpl/bin'
 ffmpeg_path2: '[INSTALL_DIR]/ffmpeg-master-latest-win64-gpl/bin'
 last_project_dir: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/PROBA
 last_project_name: PROBA
-last_project_audio: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/PROBA/proba129sec.mp3
+last_project_audio: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/PROBA/proba.mp3

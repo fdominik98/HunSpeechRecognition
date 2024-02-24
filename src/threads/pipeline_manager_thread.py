@@ -1,6 +1,7 @@
 import os
 from time import sleep
 from multiprocessing import Queue as ProcessQueue
+from threading import Event
 from queue import Queue as ThreadQueue
 from models.task import Task
 from models.segment import Segment
@@ -11,48 +12,61 @@ from models.pipeline_process import PipelineProcess
 
 class PipelineManagerThread(SpeechBaseThread): 
 
-    def __init__(self, settings : Settings, process: PipelineProcess, input_queue : ThreadQueue, result_manager, error_callback, init_start_callback,
+    def __init__(self, settings : Settings, process: PipelineProcess, result_manager, error_callback, init_start_callback,
                   init_finish_callback):
         super().__init__('PipelineManagerThread', settings, error_callback)
         self.process = process
         self.result_manager : ResultManager = result_manager
-        self.input_queue : ThreadQueue = input_queue
+        self.input_queue : ThreadQueue = ThreadQueue()
         self.init_finish_callback = init_finish_callback    
         self.init_start_callback = init_start_callback
-        self.ready_tasks : list[tuple[list[Segment], Task]] = []
+        self.__ready_tasks : list[tuple[list[Segment], Task]] = []
+
+        self.__reset_event = Event()
+
 
     def do_run(self):
         while not self.stopped():
-            if not self.process.is_alive():
-                self.process = PipelineProcess()
-                self.process.start()
-            
-            self.init_start_callback()
-            while not self.stopped():
-                if self.process.parent_conn.poll() and self.process.parent_conn.recv() == 'init_finished':                
-                    self.init_finish_callback()
-                    break
-                sleep(0.5)        
+            self.init_process()
 
-            while not self.stopped() and not self.paused(): 
+            while not self.stopped() and not self.reseted(): 
                 if not self.input_queue.empty():                  
-                        self.process_task(self.process.input_queue, self.input_queue.get())
+                    self.process_task(self.input_queue.get())
 
                 if not self.process.output_queue.empty():
                     self.save_results(self.process.output_queue.get())
+                sleep(1)
 
-                sleep(0.5)
-
-            self.resume()
+            self.__reset_event.clear()
+            self.__ready_tasks.clear()
+            while not self.input_queue.empty():
+                self.input_queue.get_nowait()
             self.process.terminate()
             self.process.join()
 
+    def init_process(self):
+        if not self.process.is_alive():
+            self.process = PipelineProcess()
+            self.process.start()
+        
+        self.init_start_callback()
+        while not self.stopped():
+            if self.process.parent_conn.poll() and self.process.parent_conn.recv() == 'init_finished':                
+                self.init_finish_callback()
+                break
+            sleep(0.5)      
+
+    def reset(self):
+        self.__reset_event.set()
+
+    def reseted(self):
+        return self.__reset_event.is_set()
 
     def save_results(self, ready_task : tuple[list[Segment], Task]):
-        self.ready_tasks.append(ready_task)
+        self.__ready_tasks.append(ready_task)
         saved_tasks : list[tuple[list[Segment], Task]] = []
         while True:
-            for segments, task in self.ready_tasks:
+            for segments, task in self.__ready_tasks:
                 if task.segment_number == self.result_manager.next_segment_num():
                     result_list = self.result_manager.save_results(segments, task)
                     for result in result_list:
@@ -61,15 +75,15 @@ class PipelineManagerThread(SpeechBaseThread):
             if len(saved_tasks) == 0:
                 break
             filtered_tasks : list[tuple[list[Segment], Task]] = []
-            for segments1, task1 in self.ready_tasks:
+            for segments1, task1 in self.__ready_tasks:
                 if not any(task1.segment_number == task2.segment_number for _, task2 in saved_tasks):
                     filtered_tasks.append((segments1, task1))
-            self.ready_tasks = filtered_tasks
+            self.__ready_tasks = filtered_tasks
             saved_tasks = []
             print(f'saved new results')
 
 
-    def process_task(self, input_queue : ProcessQueue, task : Task):    
+    def process_task(self, task : Task):    
         if not os.path.exists(task.trim_file_path):
             return
 
@@ -77,5 +91,9 @@ class PipelineManagerThread(SpeechBaseThread):
             print(f'{task.trim_file_path} already processed, skipping..')
             return
         
-        input_queue.put(task)
+        if task.is_place_holder:
+            self.process.output_queue.put(([Segment('', 0, 0)], task))
+            return
+        
+        self.process.input_queue.put(task)
         

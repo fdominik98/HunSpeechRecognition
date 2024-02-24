@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from queue import Queue
 from threading import Lock
 from models.audio_file import AudioSource
@@ -10,16 +10,3 @@ class LoadableManager(ABC):
         self.insert_widget_queue : Queue = Queue()
         self.delete_widget_queue : Queue = Queue()
         self.audio_source : AudioSource = audio_source
-
-
-    @abstractmethod
-    def get_all(self):
-        pass
-
-    @abstractmethod
-    def get(self, index : int):
-        pass
-
-    @abstractmethod    
-    def size(self):
-        pass

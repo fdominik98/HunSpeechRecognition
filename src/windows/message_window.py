@@ -5,8 +5,7 @@ class MessageWindow(CTkToplevel):
     """Initializes a top-level window showing status messages.
     """
     def __init__(self, message, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.geometry("400x200")
+        super().__init__(*args, **kwargs)        
         
         self.textbox = CTkTextbox(self, height=100, font=label_font(), wrap='word')
         self.textbox.pack(padx=20, pady=20, fill='x')

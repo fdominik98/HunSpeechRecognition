@@ -12,14 +12,16 @@ from frames.process_control_frame import ProcessControlFrame
 from utils.window_utils import center_window, open_message
 from threads.init_manager_thread import InitManagerThread
 from models.pipeline_process import PipelineProcess
+from models.environment import get_images_path
 
 class MainWindow(CTkToplevel):
-    def __init__(self, settings : Settings, pipeline_prcess : PipelineProcess):
-        super().__init__()
+    def __init__(self, master, settings : Settings, pipeline_prcess : PipelineProcess):
+        super().__init__(master=master)
         # configure window
-        self.title("Beszéd Felismerés Prototípus")
-        self.geometry("1100x720")
-        center_window(self)
+        center_window(self, 1100, 720)
+        self.title("Transzkriptor Prototípus")
+        self.iconbitmap(f'{get_images_path()}/icon.ico')
+        self.bind('<Button-1>', self.on_widget_click)
         
         self.settings : Settings = settings 
 
@@ -28,18 +30,11 @@ class MainWindow(CTkToplevel):
         self.init_manager_thread  = InitManagerThread(settings=settings, error_callback=self.error_callback)
         self.init_manager_thread.start()
 
-        # self.tabview = CTkTabview(self)
-        # self.tabview.grid(row=0, column=0, pady=5, padx=5, sticky="new")
-
-        # self.tab1 = self.tabview.add("tab 1")  # add tab at the end
-        # self.tab2 = self.tabview.add("tab 2")  # add tab at the end
-        # self.tabview.set("tab 1")  # set currently visible tab
-        
         self.right_sidebar_frame = CTkFrame(self, corner_radius=0)
         self.right_sidebar_frame.grid(row=0, column=1, padx=(5,0), sticky="nsew")
 
 
-        self.audio_player_frame = AudioPlayerFrame(self.right_sidebar_frame, 1, 0)   
+        self.audio_player_frame = AudioPlayerFrame(self.right_sidebar_frame, 1, 0, self.settings)   
 
 
         self.result_prev_frame = ResultPreviewFrame(self.right_sidebar_frame, 0, 0, 
@@ -77,7 +72,8 @@ class MainWindow(CTkToplevel):
                                                          settings=self.settings,
                                                          result_manager=self.init_manager_thread.result_manager,
                                                          process_state_change_callbacks=[self.on_process_state_change, 
-                                                                            self.audio_preview_frame.on_process_state_change],
+                                                                            self.audio_preview_frame.on_process_state_change,
+                                                                            self.result_prev_frame.on_process_state_change],
                                                          split_audio_manager=self.init_manager_thread.split_audio_manager,
                                                          trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager)
         
@@ -94,48 +90,59 @@ class MainWindow(CTkToplevel):
 
 
         self.pipeline_process : PipelineProcess = pipeline_prcess       
-        self.start_splitter_thread()
-        self.start_trimmer_thread()
+        self.splitter_thread = None
+        self.trimmer_thread = None
         self.start_pipeline_manager_thread()
 
+    def on_widget_click(self, event):
+        self.attributes('-topmost', True)
+        self.attributes('-topmost', False)
 
-    def stop_threads(self):
-        self.init_manager_thread.stop()
-        self.trimmer_thread.stop()
-        self.pipeline_manager_thread.stop()
-        self.splitter_thread.stop()
 
     def destroy_threads(self):
-        self.stop_threads()
+        if self.splitter_thread is not None:
+            self.splitter_thread.stop()
+        if self.trimmer_thread is not None:
+            self.trimmer_thread.stop()
+        self.pipeline_manager_thread.stop()
+        self.init_manager_thread.stop()
         self.init_manager_thread.join()
-        self.trimmer_thread.join()
         self.pipeline_manager_thread.join()
-        self.splitter_thread.join()
+        if self.trimmer_thread is not None:
+            self.trimmer_thread.join()
+        if self.splitter_thread is not None:
+            self.splitter_thread.join()
 
     def __cancel_processing(self):  
-        while not self.splitter_thread.input_queue.empty():
-            self.splitter_thread.input_queue.get_nowait()
-        while not self.trimmer_thread.input_queue.empty():
-            self.trimmer_thread.input_queue.get_nowait()
-        while not self.pipeline_manager_thread.input_queue.empty():
-            self.pipeline_manager_thread.input_queue.get_nowait()
-        
+        if self.splitter_thread is not None:
+            self.splitter_thread.stop()
+        if self.trimmer_thread is not None:
+            self.trimmer_thread.stop()
+        if self.trimmer_thread is not None:
+            self.trimmer_thread.join()
+        if self.splitter_thread is not None:
+            self.splitter_thread.join()
         self.pipeline_manager_thread.reset()
                  
     def on_process_state_change(self, process_state : ProcessState, forced : bool):
-        if process_state == ProcessState.STOPPED:
-            if forced:
-                self.__cancel_processing()
+        if process_state is ProcessState.STOPPED:        
+            self.__cancel_processing()
         else:
+            self.start_splitter_thread()
+            if process_state is ProcessState.TRIMMING or process_state is ProcessState.GENERATING:
+                self.start_trimmer_thread()
+
             for task in self.init_manager_thread.asset_tree_manager.get():
                 self.splitter_thread.input_queue.put(task.set_process_state(process_state))
                     
 
     def error_callback(self, message, thread):
-        self.stop_threads()
+        if self.splitter_thread is not None:
+            self.splitter_thread.stop()
+        if self.trimmer_thread is not None:
+            self.trimmer_thread.stop()
+        self.pipeline_manager_thread.stop()
         self.start_pipeline_manager_thread()
-        self.start_splitter_thread()
-        self.start_trimmer_thread()
         
         self.process_control_frame.switch_to_stop_mode()
         open_message(self, "hiba", f'{message} - {thread}') 
@@ -152,6 +159,7 @@ class MainWindow(CTkToplevel):
         self.trimmer_thread = Mp3TrimmerThread(settings = self.settings,
                                         error_callback=self.error_callback,
                                         input_queue=self.splitter_thread.output_queue,
+                                        output_queue=self.pipeline_manager_thread.input_queue,
                                         split_audio_manager=self.init_manager_thread.split_audio_manager,
                                         trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
                                         audio_stop_callback=self.audio_player_frame.stop_if_loaded)
@@ -160,7 +168,6 @@ class MainWindow(CTkToplevel):
     def start_pipeline_manager_thread(self):
         self.pipeline_manager_thread = PipelineManagerThread(settings=self.settings,
                                 process=self.pipeline_process,
-                                input_queue=self.trimmer_thread.output_queue,
                                 result_manager=self.init_manager_thread.result_manager,
                                 error_callback=self.error_callback,
                                 init_start_callback=self.init_process_frame.pipeline_init_start_callback,

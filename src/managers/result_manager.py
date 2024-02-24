@@ -27,8 +27,6 @@ class ResultManager(LoadableManager):
         
         new_results : list[ResultRow] = []
         for segment in segments:
-            if len(segment.text) == 0:
-                continue
             result = ResultRow(self.size(), task.segment_number, task.trim_file_path, (segment.start, segment.end),
                     (task.trim_timestamp[0] + segment.start, task.trim_timestamp[0] + segment.end), segment.text.strip())
             self.__result_list.append(result)
@@ -47,7 +45,7 @@ class ResultManager(LoadableManager):
                 self.__load()
                 return    
             # If the file does not exist, create an empty file with headers
-            headers = ['id', 'chunk_id', 'chunk_file', 'relative_timestamp', 'absolute_timestamp', 'sentence', 'sentence_pos']  # Define your headers here
+            headers = ['id', 'chunk_id', 'chunk_file', 'relative_timestamp', 'absolute_timestamp', 'sentence']  # Define your headers here
             with open(self.__file_path, mode='w', newline='') as file:
                 writer = csv.DictWriter(file, fieldnames=headers)
                 writer.writeheader()
@@ -69,7 +67,12 @@ class ResultManager(LoadableManager):
     def size(self) -> int:
         with self._lock:
             return len(self.__result_list)
-        
+
+    def delete_all(self):
+        with self._lock:
+            if os.path.exists(self.__file_path):
+                os.remove(self.__file_path)
+            self.__result_list.clear()        
 
     def get_result_by_audio(self, audio_file: AudioFile, elapsed_time : float) -> Optional[ResultRow]:
         with self._lock:

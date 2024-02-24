@@ -1,6 +1,7 @@
 import os
+from typing import Optional
 from enum import Enum, unique
-from utils.general_utils import to_timestamp_sec
+from utils.general_utils import timestamp_str
 
 @unique
 class AudioSource(Enum):
@@ -10,19 +11,23 @@ class AudioSource(Enum):
     TRIMLIST = 'Vágott szegmensek'
 
 class AudioFile():
-    def __init__(self, segment_number : int, file_path : str, absolute_timestamp : tuple[float, float]) -> None:
+    def __init__(self, segment_number : int, file_path : str, absolute_timestamp : tuple[float, float],                
+                 is_place_holder : bool = False) -> None:
         self.segment_number = segment_number
         self.file_path = file_path
         self.absolute_timestamp = absolute_timestamp
+        self.is_place_holder = is_place_holder
 
     def __str__(self) -> str:
-        return f'{os.path.basename(self.file_path)} {to_timestamp_sec(self.absolute_timestamp[0])}-{to_timestamp_sec(self.absolute_timestamp[1])}'
+        if self.is_place_holder:
+            return f'Üres {timestamp_str(self.absolute_timestamp)}'
+        return f'{os.path.basename(self.file_path)} {timestamp_str(self.absolute_timestamp)}'
     
     def exists(self) -> bool:
          return os.path.exists(self.file_path)
 
     def length(self) -> float:
         return self.absolute_timestamp[1] - self.absolute_timestamp[0]
-    
+
 
 

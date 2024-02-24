@@ -11,3 +11,5 @@ def label_font():
 
 def textbox_font():
     return CTkFont(size=14, family='Arial', weight='normal')
+
+blue_theme_color = '#1F6AA5'

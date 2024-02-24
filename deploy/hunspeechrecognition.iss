@@ -8,7 +8,7 @@ PrivilegesRequired=admin
 Compression=lzma
 SolidCompression=yes
 UninstallDisplayIcon={app}\hunspeechrecognition.exe
-;SetupIconFile=..\images\icon.ico
+SetupIconFile=..\images\icon.ico
 
 [Files]
 Source: "images\*"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs createallsubdirs

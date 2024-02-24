@@ -5,8 +5,8 @@ class Settings(YamlModel):
     chunk_size : int = 29
     project_audio_path : str = ''
     project_audio_duration : float = 0
-    noise_treshold : int = -60
-    silence_dur : float = 0.5
+    noise_treshold : int = -30
+    silence_dur : float = 2
     project_dir : str = ''
     project_name : str = ''
     project_audio_name : str = ''

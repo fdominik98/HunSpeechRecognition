@@ -4,8 +4,7 @@ class Task():
     def __init__(self, process_state : ProcessState,
                 segment_number : int,
                 main_file_path : str,
-                split_timestamp : tuple[float, float], 
-                trim_timestamp : tuple[float, float],
+                split_timestamp : tuple[float, float],
                 trim_file_path : str,
                 split_file_path : str) -> None:
         self.process_state : ProcessState = process_state
@@ -14,7 +13,8 @@ class Task():
         self.split_file_path : str = split_file_path
         self.split_timestamp : tuple[float, float] = split_timestamp
         self.trim_file_path : str = trim_file_path
-        self.trim_timestamp : tuple[float, float] = trim_timestamp
+        self.trim_timestamp : tuple[float, float] = (0,0)
+        self.is_place_holder = False
 
     def set_process_state(self, process_state : ProcessState):
         self.process_state = process_state
@@ -34,6 +34,10 @@ class Task():
     
     def set_trim_file_path(self, path : str):
         self.trim_file_path = path
+        return self
+    
+    def set_place_holder(self, is_place_holder : bool):
+        self.is_place_holder = is_place_holder
         return self
     
     def set_trim_timestamp(self, timestamp : tuple[float, float]):

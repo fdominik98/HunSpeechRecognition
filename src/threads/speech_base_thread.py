@@ -1,5 +1,5 @@
 import traceback
-import logging
+from custom_logging.setup_logging import logger
 from threading import Thread, Event
 from abc import ABC, abstractmethod
 from models.settings import Settings
@@ -13,14 +13,13 @@ class SpeechBaseThread(Thread, ABC):
         self.settings : Settings = settings
         self.error_callback = error_callback
         self.__stop_event = Event()
-        self.__reset_event = Event()
 
     def run(self):  
         try:
            self.do_run()
            print(f"{self.name} terminated gracefully.")           
         except Exception as e:
-           logging.getLogger().error(e)
+           logger.error(e)
            traceback.print_exc()
            self.error_callback(e, self.name)
 
@@ -34,11 +33,3 @@ class SpeechBaseThread(Thread, ABC):
     def stopped(self):
         return self.__stop_event.is_set()
     
-    def reset(self):
-        self.__reset_event.set()
-
-    def paused(self):
-        return self.__reset_event.is_set()
-    
-    def resume(self):
-        self.__reset_event.clear()

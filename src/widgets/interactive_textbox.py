@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 from customtkinter import CTkTextbox, END, CURRENT, NONE
-from utils.fonts import textbox_font
+from utils.fonts import textbox_font, blue_theme_color
 from managers.result_manager import ResultManager
 from managers.audio_file_manager import AudioFileManager, TrimmedAudioFileManager
 from models.audio_file import AudioFile
@@ -18,7 +18,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.bind("<Double-1>", command=self.on_text_double_click)
 
         self.cursor_tag = 'cursor_tag'
-        self.tag_config(self.cursor_tag, background="green")
+        self.tag_config(self.cursor_tag, background=blue_theme_color)
 
         self.configure(state="disabled")
 
@@ -63,6 +63,12 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.delete(start_index, end_index)
         self.configure(state='disabled')
 
+    def clear_rows(self):
+        self.configure(state='normal')
+        self.delete('1.0', END)
+        self.configure(state='disabled')
+
+
     def row_count(self):
         last_char_index = self.index('end-1c')
         return int(last_char_index.split('.')[0])
@@ -76,9 +82,8 @@ class AudioInteractiveTextbox(InteractiveTextbox):
     def load_file(self, index):
         if index > self.audio_file_manager.size() - 1:
             return
-        audio_file = self.audio_file_manager.get(index)
+        audio_file = self.audio_file_manager.get_by_index(index)
         self.audio_load_callback(self.audio_file_manager, audio_file)
-
 
 class ResultInteractiveTextbox(InteractiveTextbox):
     def __init__(self, result_manager : ResultManager, trimmed_audio_manager: TrimmedAudioFileManager, *args, **kwargs):
@@ -108,4 +113,5 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         else:
             char_index_str = str(max(char_index - 1, 0))
         self.tag_add(self.cursor_tag, f'{result.id + 1}.{char_index_str}', f'{result.id + 1}.{char_index_str} +1c')
+        self.see(f"{self.cursor_tag}.first")
         

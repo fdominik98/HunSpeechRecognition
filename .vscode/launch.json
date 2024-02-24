@@ -10,6 +10,13 @@
             "request": "launch",
             "program": "src/project_interface.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python Debugger: eac_converter",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "src/concept/eac_converter.py",
+            "console": "integratedTerminal"
         }
     ]
 }

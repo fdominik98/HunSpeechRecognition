@@ -1,4 +1,3 @@
-from subprocess import PIPE, Popen, STARTUPINFO, SW_HIDE, STARTF_USESHOWWINDOW
 from mutagen.mp3 import MP3
 from customtkinter import CTkTextbox
 
@@ -62,19 +61,8 @@ def to_timestamp_1dec(seconds):
         return f"{hours}:{minutes:02d}:{remaining_seconds:04.1f}"
     return f"{minutes}:{remaining_seconds:04.1f}"
     
-def run_ffmpeg_command(command):
-    # Create a STARTUPINFO structure
-    startupinfo = STARTUPINFO()
-    startupinfo.dwFlags |= STARTF_USESHOWWINDOW
-    # Prevents the console window from being shown
-    startupinfo.wShowWindow = SW_HIDE
-    # Example of running a command without showing a console window
-    process = Popen(command, stdout=PIPE, stderr=PIPE, universal_newlines=True, startupinfo=startupinfo)
-    output, error = process.communicate()
-    return output, error
-
 def timestamp_str(timestamp: tuple[float, float]) -> str:
-    return f'{to_timestamp_sec(timestamp[1])} - {to_timestamp_sec(timestamp[0])}'
+    return f'{to_timestamp_sec(timestamp[0])} - {to_timestamp_sec(timestamp[1])}'
 
 
 

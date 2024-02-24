@@ -1,7 +1,7 @@
-import os
 from time import sleep
 from queue import Queue
-from utils.general_utils import run_ffmpeg_command
+from custom_pydub.custom_audio_segment import AudioSegment
+from custom_pydub.silence import split_on_silence
 from threads.speech_base_thread import SpeechBaseThread
 from models.task import Task
 from models.audio_file import AudioFile
@@ -12,10 +12,10 @@ from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileM
 
 class Mp3TrimmerThread(SpeechBaseThread): 
     def __init__(self, settings : Settings, error_callback,
-                  input_queue, split_audio_manager, trimmed_audio_manager, audio_stop_callback):
+                  input_queue, output_queue, split_audio_manager, trimmed_audio_manager, audio_stop_callback):
         super().__init__('Mp3TrimmerThread', settings, error_callback)
         self.input_queue : Queue = input_queue
-        self.output_queue : Queue = Queue()
+        self.output_queue : Queue = output_queue
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
         self.audio_stop_callback = audio_stop_callback
@@ -23,47 +23,56 @@ class Mp3TrimmerThread(SpeechBaseThread):
     def do_run(self):
         while not self.stopped():
             if not self.input_queue.empty():        
-                task = self.input_queue.get(timeout=1)
-                self.process_file(task)
+                existed = self.process_file(self.input_queue.get())
+                if not existed:
+                    sleep(0.5)  
             else:
                 sleep(1)
 
 
     def process_file(self, task : Task):
-        if not os.path.exists(task.trim_file_path) and os.path.getsize(task.split_file_path) > 0:
-            if os.path.exists(task.split_file_path):
-                self.remove_silence(task)
-                print(f'{task.split_file_path} trimmed successfully.')
-                sleep(0.5)    
-            else:
-                print(f'{task.split_file_path} does not exist, cannot trim.')      
+        existed = False
+        audiofile = self.trimmed_audio_manager.get_by_path(task.trim_file_path)
+        if audiofile is not None:
+            print(f'{task.trim_file_path} exists. Skipping...')
+            existed = True
+        elif self.split_audio_manager.exists(task.split_file_path):
+            audiofile, audio = self.trim_audio(task)
+            if self.stopped():
+                return existed
+            audio.export(task.trim_file_path, format="mp3")
+            self.trimmed_audio_manager.save_audio_file(audiofile)
+            self.trimmed_audio_manager.insert_widget_queue.put(audiofile)
+            print(f'{task.split_file_path} trimmed successfully.')
         else:
-            print(f'{task.trim_file_path} exists or {task.split_file_path} is too small. Skipping...')
-
-        if task.process_state == ProcessState.GENERATING:
-            self.output_queue.put(task)
-
-        audiofile = AudioFile(segment_number=task.segment_number,
-                               file_path=task.trim_file_path,
-                               absolute_timestamp=task.trim_timestamp)
+            print(f'{task.split_file_path} does not exist, cannot trim.')
+            return existed
         
-        if self.trimmed_audio_manager.save_audio_file(audiofile):
-            try:
-                self.audio_stop_callback(audiofile)
-                delete_index = self.split_audio_manager.delete_audio_file(audiofile)
-            except Exception as e:
-                self.trimmed_audio_manager.delete_audio_file(audiofile)
-                raise e
-            if delete_index is not None:
-                self.trimmed_audio_manager.insert_widget_queue.put(audiofile)
-                self.split_audio_manager.delete_widget_queue.put(delete_index)
+        if not self.stopped() and task.process_state is ProcessState.GENERATING:
+            self.output_queue.put(task.set_trim_timestamp(audiofile.absolute_timestamp).set_place_holder(audiofile.is_place_holder))
+        return existed
+            
 
-    def remove_silence(self, task: Task):
-        command = [
-            'ffmpeg',
-            '-i', task.split_file_path,
-            '-af', f'silenceremove=start_duration=0.3:stop_periods=-1:stop_duration={self.settings.silence_dur}:stop_threshold={self.settings.noise_treshold}dB:timestamp=write',
-            task.trim_file_path
-        ]  
-        stdout, stderr = run_ffmpeg_command(command)
 
+    def trim_audio(self, task : Task) -> tuple[AudioFile, AudioSegment]:
+        audio = AudioSegment.from_mp3(task.split_file_path)
+        processed_audio, first_start, last_end = split_on_silence(self.settings, audio)
+
+        new_timestamp = task.split_timestamp
+        is_place_holder = False
+        if first_start is not None and last_end is not None and len(processed_audio) > 300:
+            if len(audio) != len(processed_audio):    
+                new_timestamp = (task.split_timestamp[0] + float(first_start) / 1000,
+                                 task.split_timestamp[0] +  float(last_end) / 1000)
+        else:
+            processed_audio = AudioSegment.silent(duration=50)
+            is_place_holder = True
+
+        audio_file = AudioFile(segment_number=task.segment_number,
+                        file_path=task.trim_file_path,
+                        absolute_timestamp=new_timestamp,
+                        is_place_holder=is_place_holder)
+        return (audio_file, processed_audio)
+
+
+    

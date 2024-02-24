@@ -1,6 +1,7 @@
 from threading import Lock
 import json
 import os
+from typing import Optional
 from models.settings import Settings
 from models.task import Task
 from models.process_state import ProcessState
@@ -14,7 +15,7 @@ class AssetTreeManager():
         self.asset_tree_file = f'{self.assets_folder}/asset_tree.json'
         self.__lock = Lock()
         self.__task_list : list[Task] = []
-        self.asset_tree : dict[int. str] = {}
+        self.asset_tree : dict[int, str] = {}
 
     def load(self):
         with self.__lock:
@@ -84,8 +85,7 @@ class AssetTreeManager():
             task : Task = Task(process_state=ProcessState.STOPPED,
                                segment_number = segment_id,
                                main_file_path=self.settings.project_audio_path,
-                               split_timestamp = split_timestamp, 
-                               trim_timestamp = split_timestamp,
+                               split_timestamp = split_timestamp,
                                trim_file_path=trim_file_path,
                                split_file_path=split_file_path)
             self.__task_list.append(task)

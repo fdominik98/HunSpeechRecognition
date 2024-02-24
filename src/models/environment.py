@@ -1,7 +1,7 @@
 import os
 from pydantic_yaml import YamlModel
 
-EXEC_MODE = 'prod'
+EXEC_MODE = 'dev'
 
 class Environment(YamlModel):
     cuda_path : str = 'C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.3'
@@ -41,6 +41,9 @@ def get_app_data_path() -> str:
             raise Exception('Hibás futtátasi mód. (Environment.py)')
     except:
         raise Exception('A roaming data könyvtár nem található. Ellenőrizd a környezeti változókat.')
+    
+def get_images_path():
+    return f'{get_root_path()}/images'
     
 def add_to_path(path : str):
     current_path = os.environ.get('PATH', '')
