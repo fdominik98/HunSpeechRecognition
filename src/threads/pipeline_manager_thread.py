@@ -1,6 +1,4 @@
-import os
 from time import sleep
-from multiprocessing import Queue as ProcessQueue
 from threading import Event
 from queue import Queue as ThreadQueue
 from models.task import Task
@@ -9,50 +7,52 @@ from models.settings import Settings
 from threads.speech_base_thread import SpeechBaseThread
 from managers.result_manager import ResultManager
 from models.pipeline_process import PipelineProcess
+from managers.audio_file_manager import AudioFileManager
 
 class PipelineManagerThread(SpeechBaseThread): 
 
-    def __init__(self, settings : Settings, process: PipelineProcess, result_manager, error_callback, init_start_callback,
-                  init_finish_callback):
+    def __init__(self, settings : Settings, process: PipelineProcess,
+                 result_manager : ResultManager, error_callback,
+                 init_pipeline_queue : ThreadQueue, progress_queue : ThreadQueue):
         super().__init__('PipelineManagerThread', settings, error_callback)
         self.process = process
         self.result_manager : ResultManager = result_manager
         self.input_queue : ThreadQueue = ThreadQueue()
-        self.init_finish_callback = init_finish_callback    
-        self.init_start_callback = init_start_callback
-        self.__ready_tasks : list[tuple[list[Segment], Task]] = []
-
+        self.init_pipeline_queue : ThreadQueue = init_pipeline_queue
+        self.progress_queue : ThreadQueue = progress_queue
         self.__reset_event = Event()
-
+        self.__ready_tasks = 0
 
     def do_run(self):
         while not self.stopped():
             self.init_process()
 
-            while not self.stopped() and not self.reseted(): 
+            self.__ready_tasks = 0
+            self.__reset_event.clear() 
+
+            while not self.stopped() and not self.reseted():   
                 if not self.input_queue.empty():                  
                     self.process_task(self.input_queue.get())
 
                 if not self.process.output_queue.empty():
                     self.save_results(self.process.output_queue.get())
+                    self.__ready_tasks += 1
+                    self.progress_queue.put(self.__ready_tasks)
                 sleep(1)
 
-            self.__reset_event.clear()
-            self.__ready_tasks.clear()
-            while not self.input_queue.empty():
-                self.input_queue.get_nowait()
             self.process.terminate()
             self.process.join()
+
 
     def init_process(self):
         if not self.process.is_alive():
             self.process = PipelineProcess()
             self.process.start()
         
-        self.init_start_callback()
+        self.init_pipeline_queue.put("started")
         while not self.stopped():
             if self.process.parent_conn.poll() and self.process.parent_conn.recv() == 'init_finished':                
-                self.init_finish_callback()
+                self.init_pipeline_queue.put("finished")
                 break
             sleep(0.5)      
 
@@ -63,32 +63,18 @@ class PipelineManagerThread(SpeechBaseThread):
         return self.__reset_event.is_set()
 
     def save_results(self, ready_task : tuple[list[Segment], Task]):
-        self.__ready_tasks.append(ready_task)
-        saved_tasks : list[tuple[list[Segment], Task]] = []
-        while True:
-            for segments, task in self.__ready_tasks:
-                if task.segment_number == self.result_manager.next_segment_num():
-                    result_list = self.result_manager.save_results(segments, task)
-                    for result in result_list:
-                        self.result_manager.insert_widget_queue.put(result)
-                    saved_tasks.append((segments, task))
-            if len(saved_tasks) == 0:
-                break
-            filtered_tasks : list[tuple[list[Segment], Task]] = []
-            for segments1, task1 in self.__ready_tasks:
-                if not any(task1.segment_number == task2.segment_number for _, task2 in saved_tasks):
-                    filtered_tasks.append((segments1, task1))
-            self.__ready_tasks = filtered_tasks
-            saved_tasks = []
-            print(f'saved new results')
+        result_list = self.result_manager.save_results(ready_task[0], ready_task[1])
+        for result in result_list:
+            self.result_manager.insert_widget_queue.put(result)
+        print(f'saved new results')
 
-
-    def process_task(self, task : Task):    
-        if not os.path.exists(task.trim_file_path):
+   
+    def process_task(self, task : Task):  
+        if not AudioFileManager.exists(task.result_file_path):
             return
 
-        if any(r.chunk_file == task.trim_file_path for r in self.result_manager.get_all()):
-            print(f'{task.trim_file_path} already processed, skipping..')
+        if any(r.chunk_id == task.chunk_id for r in self.result_manager.get_all()):
+            print(f'{task.result_file_path} already processed, skipping..')
             return
         
         if task.is_place_holder:
@@ -96,4 +82,5 @@ class PipelineManagerThread(SpeechBaseThread):
             return
         
         self.process.input_queue.put(task)
-        
+        return
+

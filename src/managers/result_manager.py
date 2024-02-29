@@ -14,12 +14,6 @@ class ResultManager(LoadableManager):
         self.__file_path = f'{project_folder}/result.csv'
         self.__result_list : list[ResultRow] = []
 
-    def __load(self):
-        # Load CSV into a list of dictionaries
-        with open(self.__file_path, mode='r', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            [self.__result_list.append(ResultRow.from_dict(row)) for row in reader]
-            
             
     def save_results(self, segments : list[Segment], task : Task) -> list[ResultRow]:
         if len(segments) == 0:
@@ -27,12 +21,14 @@ class ResultManager(LoadableManager):
         
         new_results : list[ResultRow] = []
         for segment in segments:
-            result = ResultRow(self.size(), task.segment_number, task.trim_file_path, (segment.start, segment.end),
-                    (task.trim_timestamp[0] + segment.start, task.trim_timestamp[0] + segment.end), segment.text.strip())
+            absolute_timestamp = (task.result_timestamp[0] + segment.start, task.result_timestamp[0] + segment.end)
+            result = ResultRow(round(absolute_timestamp[0] * 10), task.chunk_id, task.result_file_path, (segment.start, segment.end),
+                    absolute_timestamp, segment.text.strip())
             self.__result_list.append(result)
             new_results.append(result)
         
         with self._lock:
+            self.__write_headers()
             with open(self.__file_path, 'a', newline='', encoding='utf-8') as file:
                 writer = csv.DictWriter(file, fieldnames=new_results[0].to_dict().keys())
                 writer.writerows([result.to_dict() for result in new_results])
@@ -41,8 +37,14 @@ class ResultManager(LoadableManager):
 
     def load(self):
         with self._lock:
+            self.__write_headers() 
+            with open(self.__file_path, mode='r', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                [self.__result_list.append(ResultRow.from_dict(row)) for row in reader]
+               
+
+    def __write_headers(self):
             if os.path.exists(self.__file_path):
-                self.__load()
                 return    
             # If the file does not exist, create an empty file with headers
             headers = ['id', 'chunk_id', 'chunk_file', 'relative_timestamp', 'absolute_timestamp', 'sentence']  # Define your headers here
@@ -50,23 +52,20 @@ class ResultManager(LoadableManager):
                 writer = csv.DictWriter(file, fieldnames=headers)
                 writer.writeheader()
 
+
     def get_all(self) -> list[ResultRow]:
         with self._lock:
             return self.__result_list
         
-    def get(self, index) -> ResultRow:
+    def get_by_id(self, id) -> Optional[ResultRow]:
         with self._lock:
-            return self.__result_list[index]
-
-    def next_segment_num(self) -> int:
-        with self._lock:
-            if len(self.__result_list) == 0:
-                return 0
-            return self.__result_list[-1].chunk_id + 1
+            return next((item for item in self.__result_list if item.id == id), None)
         
-    def size(self) -> int:
+    def chunk_size(self) -> int:
         with self._lock:
-            return len(self.__result_list)
+            unique_ids = set(res.chunk_id for res in self.__result_list)
+            return len(unique_ids)
+
 
     def delete_all(self):
         with self._lock:
@@ -77,7 +76,7 @@ class ResultManager(LoadableManager):
     def get_result_by_audio(self, audio_file: AudioFile, elapsed_time : float) -> Optional[ResultRow]:
         with self._lock:
             return next((item for item in self.__result_list if 
-                           item.chunk_id == audio_file.segment_number and
+                           item.chunk_id == audio_file.chunk_id and
                            item.chunk_file == audio_file.file_path and 
                            item.relative_timestamp[0] <= elapsed_time and
                            item.relative_timestamp[1] > elapsed_time), None)

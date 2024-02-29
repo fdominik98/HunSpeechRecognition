@@ -55,16 +55,19 @@ class AudioFileManager(LoadableManager, ABC):
 
     @staticmethod
     def exists(path : str) -> bool:
-        gen_path = AudioFileManager.get_info_path(path)
-        return os.path.isfile(path) and str(path).lower().endswith('.mp3') and os.path.exists(gen_path)
+        info_path = AudioFileManager.get_info_path(path)
+        return os.path.isfile(path) and str(path).lower().endswith('.wav') and os.path.exists(info_path)
+
+    def contains(self, path : str)-> bool:
+        return self.exists(path) and path in self._path_list
 
     @staticmethod
     def load_file(file_path) -> Optional[AudioFile]:
-        gen_path = AudioFileManager.get_info_path(file_path)
-        if os.path.isfile(file_path) and str(file_path).lower().endswith('.mp3') and os.path.exists(gen_path):
-            with open(gen_path, 'r') as f:
+        if AudioFileManager.exists(file_path):
+            info_path = AudioFileManager.get_info_path(file_path)
+            with open(info_path, 'r') as f:
                 general_data = json.load(f)
-            return AudioFile(general_data["segment_number"],
+            return AudioFile(general_data["chunk_id"],
                                 file_path,
                                 tuple(general_data["absolute_timestamp"]),
                                 is_place_holder=general_data["is_place_holder"])
@@ -72,16 +75,16 @@ class AudioFileManager(LoadableManager, ABC):
         
     def save_audio_file(self, audio_file : AudioFile):
         with self._lock:
-            gen_path = AudioFileManager.get_info_path(audio_file.file_path)
-            data_to_store = {"segment_number": audio_file.segment_number,
+            info_path = AudioFileManager.get_info_path(audio_file.file_path)
+            data_to_store = {"chunk_id": audio_file.chunk_id,
                                             "absolute_timestamp": audio_file.absolute_timestamp,
                                             "is_place_holder" : audio_file.is_place_holder}
-            with open(gen_path, 'w') as f:
+            with open(info_path, 'w') as f:
                 json.dump(data_to_store, f)              
             self._size = self._size + 1
 
     def __delete_file_safe(self, file_path) -> bool:
-        gen_path = AudioFileManager.get_info_path(file_path)
+        info_path = AudioFileManager.get_info_path(file_path)
         try:
             # Try to rename the file, which can fail if the file is in use
             temp_path = file_path + '.tmp'
@@ -89,15 +92,11 @@ class AudioFileManager(LoadableManager, ABC):
             # If successful, delete the file
             os.remove(temp_path)
 
-            temp_path = gen_path + '.tmp'
-            os.rename(gen_path, temp_path)
+            temp_path = info_path + '.tmp'
+            os.rename(info_path, temp_path)
             # If successful, delete the file
             os.remove(temp_path)
-
-            temp_path = ampl_path + '.tmp'
-            os.rename(ampl_path, temp_path)
-            # If successful, delete the file
-            os.remove(temp_path)
+            
             return True
         except OSError as e:
             raise OSError('A fájl nem törölhető mert használatban van. Próbáld leállítani a lejátszást és indítsd újra a műveletet!')
@@ -135,6 +134,9 @@ class AudioFileManager(LoadableManager, ABC):
                 return None
             return self.load_file(self._path_list[index])
 
+    def get_audio_by_result(self, result : ResultRow) -> Optional[AudioFile]:
+        with self._lock:
+            return self.load_file(result.chunk_file)
 
 
 class SplitAudioFileManager(AudioFileManager):
@@ -154,9 +156,6 @@ class TrimmedAudioFileManager(AudioFileManager):
     def load(self):
         self._path_list = [task.trim_file_path for task in self.asset_manager.get()]
 
-    def get_audio_by_result(self, result : ResultRow) -> Optional[AudioFile]:
-        with self._lock:
-            return self.load_file(result.chunk_file)
         
 class MainAudioManager(AudioFileManager):
     def __init__(self, audio_path : str) -> None:

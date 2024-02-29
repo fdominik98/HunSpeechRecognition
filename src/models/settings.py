@@ -10,6 +10,7 @@ class Settings(YamlModel):
     project_dir : str = ''
     project_name : str = ''
     project_audio_name : str = ''
+    trim_switch_var : bool = True
 
     def chunk_count(self):
         result = self.project_audio_duration / self.chunk_size

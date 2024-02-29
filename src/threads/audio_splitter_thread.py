@@ -7,16 +7,18 @@ from models.task import Task
 from models.settings import Settings
 from models.audio_file import AudioFile
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager, MainAudioManager
-from models.process_state import ProcessState
 
-class Mp3SplitterThread(SpeechBaseThread): 
-    def __init__(self, settings : Settings, error_callback,
-                  split_audio_manager, trimmed_audio_manager):
-        super().__init__('Mp3SplitterThread', settings, error_callback)
+class AudioSplitterThread(SpeechBaseThread): 
+    def __init__(self, settings : Settings, error_callback, output_queue : Queue,
+                progress_queue : Queue, split_audio_manager : SplitAudioFileManager,
+                trimmed_audio_manager : TrimmedAudioFileManager):
+        super().__init__('AudioSplitterThread', settings, error_callback)
         self.input_queue : Queue = Queue()
-        self.output_queue : Queue = Queue()
+        self.output_queue : Queue = output_queue
+        self.progress_queue : Queue = progress_queue
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
+        self.__ready_tasks = 0
 
     def do_run(self):
         if not MainAudioManager.exists(self.settings.project_audio_path):
@@ -25,18 +27,19 @@ class Mp3SplitterThread(SpeechBaseThread):
         
         while not self.stopped():
             if not self.input_queue.empty():
-                existed = self.split_audio(self.input_queue.get())
-                if not existed:
-                    sleep(0.5)
+                processed = self.split_audio(self.input_queue.get())
+                self.__ready_tasks += 1
+                self.progress_queue.put(self.__ready_tasks)
+                if processed:
+                    sleep(0.2)
             else:
                 sleep(1)
 
 
     def split_audio(self, task : Task):
-        existed = False
+        processed = False
         if self.split_audio_manager.exists(task.split_file_path):
             print(f'{task.split_file_path} already split. Skipping...')  
-            existed = True       
         else:
             command = [
                 'ffmpeg',
@@ -47,21 +50,23 @@ class Mp3SplitterThread(SpeechBaseThread):
                 task.split_file_path
             ]
             run_ffmpeg_command(command=command)
-            audio : AudioSegment = AudioSegment.from_mp3(task.split_file_path)
-            audio = audio.set_channels(1)            
-            audio = audio.apply_gain(0.0 - audio.max_dBFS)
+            audio : AudioSegment = AudioSegment.from_wav(task.split_file_path)
+            audio = audio.apply_gain(-1.0 - audio.max_dBFS)
 
-            audio.export(task.split_file_path, format="mp3")
-            split_audio_file = AudioFile(segment_number=task.segment_number,
+            audio.export(task.split_file_path, format="wav")
+            
+            split_audio_file = AudioFile(segment_number=task.chunk_id,
                                         file_path=task.split_file_path,
                                         absolute_timestamp=task.split_timestamp)
 
             self.split_audio_manager.save_audio_file(split_audio_file)
             self.split_audio_manager.insert_widget_queue.put(split_audio_file)
             print(f'{task.split_file_path} split successfully.') 
+            processed = True
 
-        if not self.stopped() and (task.process_state is ProcessState.TRIMMING or task.process_state is ProcessState.GENERATING):
-            self.output_queue.put(task) 
-        return existed
+        if not self.stopped():
+            self.output_queue.put(task.set_result_timestamp(task.split_timestamp)
+                                .set_result_file_path(task.split_file_path))
+        return processed
 
     

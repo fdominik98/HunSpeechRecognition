@@ -25,7 +25,7 @@ def open_message(parent : CTkToplevel, title : str, message : str):
     parent.message_window.attributes('-topmost', True)
 
 def open_plot(parent : CTkToplevel, title : str, audio_manager, audio_file) -> PlotWindow:        
-    parent.plot_window = PlotWindow(audio_manager, audio_file, master=parent)  # create window if its None or destroyed
+    parent.plot_window = PlotWindow(audio_manager, audio_file, master=parent)
     center_window(parent.plot_window, 850, 500)
     parent.plot_window.iconbitmap(f'{get_images_path()}/icon.ico')
     parent.plot_window.title(title)       

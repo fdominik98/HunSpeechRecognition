@@ -12,10 +12,10 @@ SetupIconFile=..\images\icon.ico
 
 [Files]
 Source: "images\*"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "environment\*"; DestDir: "{userappdata}\HunSpeechRecognition\environment"; Flags: ignoreversion recursesubdirs createallsubdirs
-;Source: "ffmpeg-master-latest-win64-gpl\*"; DestDir: "{app}\ffmpeg-master-latest-win64-gpl"; Flags: ignoreversion recursesubdirs createallsubdirs
-;Source: "dist\hunspeechrecognition\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "dist\hunspeechrecognition\hunspeechrecognition.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "environment\*"; DestDir: "{userappdata}\HunSpeechRecognition\environment"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "ffmpeg-master-latest-win64-gpl\*"; DestDir: "{app}\ffmpeg-master-latest-win64-gpl"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\hunspeechrecognition\_internal\*"; DestDir: "{app}\_internal"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Dirs]
 ; Ensures the YourApplicationName folder is created inside the AppData\Roaming directory

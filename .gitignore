@@ -1,6 +1,11 @@
 **/*.mp3
 **/*.wav
 **/*.mkv
+**/*.avi
+**/*.MP3
+**/*.WAV
+**/*.AVI
+**/*.MKV
 **/*.exe
 venv
 env

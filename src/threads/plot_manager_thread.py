@@ -21,9 +21,21 @@ class PlotManagerThread(SpeechBaseThread):
         if self.audio_file is None or self.audio_file.length() > 60:
             return
 
-        audio = AudioSegment.from_mp3(self.audio_file.file_path)
+        audio = AudioSegment.from_wav(self.audio_file.file_path)
 
-        samples_float = np.array(audio.get_array_of_samples()).astype(np.float32)
+        if audio.channels == 1:
+            samples_float = np.array(audio.get_array_of_samples()).astype(np.float32)
+        else:
+            # Stereo
+            left_channel = audio.split_to_mono()[0]
+            right_channel = audio.split_to_mono()[1]
+
+            # You can either process them separately or mix them down to mono
+            # Here's how you might mix them to mono
+            samples_left = np.array(left_channel.get_array_of_samples()).astype(np.float32)
+            samples_right = np.array(right_channel.get_array_of_samples()).astype(np.float32)
+            samples_float = np.minimum(samples_left , samples_right)
+
         normalized_samples = samples_float / (2**(audio.sample_width * 8 - 1) - 1)
         normalized_samples[normalized_samples == 0] = np.finfo(float).eps
         samples_dBFS = 20 * np.log10(np.abs(normalized_samples))

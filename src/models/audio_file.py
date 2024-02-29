@@ -13,7 +13,7 @@ class AudioSource(Enum):
 class AudioFile():
     def __init__(self, segment_number : int, file_path : str, absolute_timestamp : tuple[float, float],                
                  is_place_holder : bool = False) -> None:
-        self.segment_number = segment_number
+        self.chunk_id = segment_number
         self.file_path = file_path
         self.absolute_timestamp = absolute_timestamp
         self.is_place_holder = is_place_holder

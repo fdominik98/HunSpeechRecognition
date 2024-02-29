@@ -1,9 +1,4 @@
-from mutagen.mp3 import MP3
 from customtkinter import CTkTextbox
-
-def get_audio_duration(file_path):
-    audio = MP3(file_path)        
-    return float(audio.info.length) 
 
 def empty(text : str):
     return ''.join(text.split()) == ''

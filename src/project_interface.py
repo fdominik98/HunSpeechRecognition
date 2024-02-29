@@ -1,23 +1,27 @@
 import os
-from shutil import copy
+from typing import Optional
 from multiprocessing import freeze_support
-from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, set_appearance_mode, set_default_color_theme
+from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, CTkProgressBar, set_appearance_mode, set_default_color_theme, DISABLED, NORMAL
 from managers.settings_manager import SettingsManager
-from utils.general_utils import empty, get_text, get_audio_duration
+from utils.general_utils import empty, get_text
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from windows.main_window import MainWindow
-from managers.audio_file_manager import MainAudioManager
-from models.audio_file import AudioFile
 from models.pipeline_process import PipelineProcess
 from managers.environment_manager import EnvironmentManager
 from models.environment import get_images_path
 from custom_logging.setup_logging import setup_logging
+from utils.audio_converter import audio_file_formats
+from threads.project_loader_thread import ProjectLoaderThread, ProjectCreatorThread
+
 
 freeze_support() # Preventing multiple windows in production
 
 set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
 set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+
+TITLE = "Transzkriptor Prototípus"
+ICON = f'{get_images_path()}/icon.ico'
 
 setup_logging()
 
@@ -26,12 +30,14 @@ class ProjectInterface(CTk):
     def __init__(self):
         super().__init__()
         self.message_window = None
-        self.main_app_window = None
+        self.project_loader_thread : Optional[ProjectLoaderThread] = None
+        self.main_app_window : Optional[MainWindow] = None
+        self.loading_state = False
 
         # configure window
         center_window(self, 500, 500)
-        self.title("Transzkriptor Prototípus")
-        self.iconbitmap(default=f'{get_images_path()}/icon.ico')        
+        self.title(TITLE)
+        self.iconbitmap(default=ICON)        
 
         try:
             self.environment_manager = EnvironmentManager()
@@ -47,9 +53,6 @@ class ProjectInterface(CTk):
         self.project_folder_label.grid(row=0, column=0, padx=20, pady=(40,0), sticky='sw')
         self.project_folder_textbox = CTkTextbox(self.side_bar, height=30)
         self.project_folder_textbox.grid(row=1, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.project_folder_textbox.insert("0.0", self.environment_manager.get_last_project_dir())
-        self.project_folder_textbox.configure(state="disabled")
-
         self.__bind_textbox_click(self.project_folder_textbox, self.__browse_project_folder)
 
 
@@ -57,7 +60,6 @@ class ProjectInterface(CTk):
         self.project_name_label.grid(row=2, column=0, padx=20, pady=(40,0), sticky='nsew')
         self.project_name_textbox = CTkTextbox(self.side_bar, height=30, wrap='word')
         self.project_name_textbox.grid(row=3, column=0, padx=40, pady=(10,0), sticky='nsew')
-        self.__set_project_name(self.environment_manager.get_last_project_name())
         self.project_name_textbox.bind("<Key>", lambda e: self.__center_pname_textbox())
 
 
@@ -65,11 +67,9 @@ class ProjectInterface(CTk):
         self.input_file_label.grid(row=4, column=0, padx=20, pady=(40,0), sticky='sw')
         self.input_file_textbox = CTkTextbox(self.side_bar, height=30, wrap='word')
         self.input_file_textbox.grid(row=5, column=0, padx=20, pady=(10,0), sticky='nsew')
-        self.input_file_textbox.insert("0.0", self.environment_manager.get_last_project_audio())
-        self.input_file_textbox.configure(state="disabled")
+        self.input_file_textbox.configure(state=DISABLED)
        
-        self.__bind_textbox_click(self.input_file_textbox, self.__browse_input_file)
-        
+        self.__bind_textbox_click(self.input_file_textbox, self.__browse_input_file)        
 
 
         self.load_project_button = CTkButton(self.side_bar, command=self.__load_project, text="Project betöltése", font=button_font())
@@ -78,9 +78,14 @@ class ProjectInterface(CTk):
         self.create_project_button = CTkButton(self.side_bar, command=self.__create_project, text="Projekt létrehozása", font=button_font())
         self.create_project_button.grid(row=7, column=0, padx=20, pady=10, sticky='nsew')
 
+        self.loading_progressbar = CTkProgressBar(self, orientation="horizontal", height=10, corner_radius=0, determinate_speed=2.5)
+        self.loading_progressbar.grid(row=8, column=0, padx=20, pady=10, sticky="wsne") 
+        self.loading_progressbar.grid_remove()  
+
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
-            
+
+        self.init_project_folder(self.environment_manager.get_last_project_dir())            
 
         self.pipeline_process = PipelineProcess()
         self.pipeline_process.start()
@@ -92,18 +97,30 @@ class ProjectInterface(CTk):
 
 
     def __browse_input_file(self, e):
-        file_path = filedialog.askopenfilename(filetypes=(("MP3 files", "*.mp3"),))
+        if self.loading_state:
+            return
+        file_path = filedialog.askopenfilename(filetypes=audio_file_formats)
         self.__set_input_file(file_path)
 
        
     def __browse_project_folder(self, e):
+        if self.loading_state:
+            return
         directory = filedialog.askdirectory()
+        self.init_project_folder(directory)
+
+
+    def init_project_folder(self, directory):
         if self.__is_project(directory):
             settings_manager = SettingsManager(directory)
             self.__set_project_name(settings_manager.get().project_name)
             self.__set_input_file(settings_manager.get().project_audio_path)
-            self.project_name_textbox.configure(state="disabled")
+            self.project_name_textbox.configure(state=DISABLED)
+            self.create_project_button.configure(state=DISABLED)
+            self.load_project_button.configure(state=NORMAL)
         else:
+            self.create_project_button.configure(state=NORMAL)
+            self.load_project_button.configure(state=DISABLED)
             self.__set_project_name('')
             self.__set_input_file('')
 
@@ -111,19 +128,19 @@ class ProjectInterface(CTk):
 
 
     def __set_input_file(self, path : str):
-        self.input_file_textbox.configure(state="normal")
+        self.input_file_textbox.configure(state=NORMAL)
         self.input_file_textbox.delete("0.0", "end")
         self.input_file_textbox.insert("0.0", path)
-        self.input_file_textbox.configure(state="disabled")
+        self.input_file_textbox.configure(state=DISABLED)
 
     def __set_project_folder(self, path : str):
-        self.project_folder_textbox.configure(state="normal")
+        self.project_folder_textbox.configure(state=NORMAL)
         self.project_folder_textbox.delete("0.0", 'end')
         self.project_folder_textbox.insert("0.0", path) 
-        self.project_folder_textbox.configure(state="disabled")
+        self.project_folder_textbox.configure(state=DISABLED)
 
     def __set_project_name(self, name: str):
-        self.project_name_textbox.configure(state="normal")
+        self.project_name_textbox.configure(state=NORMAL)
         self.project_name_textbox.delete("0.0", 'end')
         self.project_name_textbox.insert("0.0", name) 
         self.__center_pname_textbox()
@@ -163,34 +180,11 @@ class ProjectInterface(CTk):
             open_message(self, 'hiba', 'A projekt nem hozható létre egy másik projekt mappában.')
             return
         
-        os.makedirs(project_dir)
-
-        input_file_name = os.path.basename(input_file)
-        project_audio_path = f'{project_dir}/{input_file_name}'
-        audio_manager = MainAudioManager(project_audio_path)
-        copy(input_file, project_audio_path)
-        project_audio_duration = get_audio_duration(project_audio_path) 
-        audio_manager.save_audio_file(AudioFile(0, project_audio_path, (0, project_audio_duration)))
-
-
-        with open(f'{project_dir}/.audiorecproj', 'w') as file:
-            file.write('')
-
-        settings_manager = SettingsManager(project_dir)
-        settings_manager.get().project_dir = project_dir
-        settings_manager.get().project_audio_path = project_audio_path
-        settings_manager.get().project_audio_duration = project_audio_duration
-        settings_manager.get().project_audio_name = input_file_name
-        settings_manager.get().project_name = project_name
-        settings_manager.save_settings()
-
-        self.environment_manager.set_last_project_dir(project_dir)
-        self.environment_manager.set_last_project_name(project_name)
-        self.environment_manager.set_last_project_audio(project_audio_path)
-        self.environment_manager.save_environment()
-
-        self.__open_main_application(settings_manager)
-
+        os.makedirs(project_dir)        
+        self.project_loader_thread = ProjectCreatorThread(self.load_error_callback, self.environment_manager, project_dir, input_file, project_name) 
+        self.__set_loading_state()
+        self.project_loader_thread.start()
+        self.__open_main_application()
 
 
     def __load_project(self):
@@ -198,29 +192,56 @@ class ProjectInterface(CTk):
         if not os.path.exists(f'{directory}/.audiorecproj'):
             open_message(self, 'hiba', 'A projekt nem található.')
             return
-        settings_manager = SettingsManager(directory)
-
-        self.environment_manager.set_last_project_dir(settings_manager.get().project_dir)
-        self.environment_manager.set_last_project_name(settings_manager.get().project_name)
-        self.environment_manager.set_last_project_audio(settings_manager.get().project_audio_path)
-        self.environment_manager.save_environment()
-
-        self.__open_main_application(settings_manager)
+        self.project_loader_thread = ProjectLoaderThread(self.load_error_callback, self.environment_manager, directory)
+        self.__set_loading_state()
+        self.project_loader_thread.start()
+        self.__open_main_application()
 
 
-    def __open_main_application(self, settings_manager : SettingsManager):
+    def load_error_callback(self, message, thread):
+        open_message(self, "hiba", f'{message} - {thread}') 
+        self.__unset_loading_state()
+
+
+    def __open_main_application(self):
+        if self.project_loader_thread is None:
+            return
+        if self.project_loader_thread.is_alive():
+            self.after(300, self.__open_main_application)
+            return
+        self.main_app_window = MainWindow(self.master, self.project_loader_thread.settings, self.pipeline_process)
+        self.__unset_loading_state()
         self.withdraw()
-        self.main_app_window = MainWindow(self, settings_manager.get(), self.pipeline_process)        
-        # When the main application is closed, end the program
-        self.main_app_window.protocol("WM_DELETE_WINDOW", lambda settings_manager=settings_manager: self.on_closing(settings_manager))
+        self.main_app_window.protocol("WM_DELETE_WINDOW", lambda settings_manager=self.project_loader_thread.settings_manager: self.on_main_window_closing(settings_manager))
+        self.main_app_window.iconbitmap(ICON)
+        self.main_app_window.title(TITLE)
+        center_window(self.main_app_window, 1100, 720)
+        self.main_app_window.state('zoomed')
 
 
-    def on_closing(self, settings_manager : SettingsManager):
+    def on_main_window_closing(self, settings_manager : SettingsManager):
+        if self.main_app_window is None:
+            return
         settings_manager.save_settings()
         self.main_app_window.withdraw()
         self.deiconify()
+        self.__unset_loading_state()
         self.main_app_window.destroy_threads()
         self.main_app_window.destroy()
+
+    def __unset_loading_state(self):
+        self.loading_state = False
+        self.loading_progressbar.grid_remove()  
+        self.loading_progressbar.stop()
+        self.init_project_folder(get_text(self.project_folder_textbox))
+
+    def __set_loading_state(self):
+        self.loading_state = True
+        self.loading_progressbar.grid()  
+        self.loading_progressbar.start()
+        self.load_project_button.configure(state=DISABLED)
+        self.create_project_button.configure(state=DISABLED)
+        self.project_name_textbox.configure(state=DISABLED)
 
 
 

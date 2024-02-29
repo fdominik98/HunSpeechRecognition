@@ -48,7 +48,7 @@ class AssetTreeManager():
                 for i in range(10):
                     if file_counter[0] >= n:
                         break
-                    file_paths[file_counter[0]] = f'{node_id}/audio{file_counter[0]:03d}.mp3'
+                    file_paths[file_counter[0]] = f'{node_id}/audio{file_counter[0]:03d}.wav'
                     file_counter[0] += 1
                 return file_paths
 
@@ -86,8 +86,8 @@ class AssetTreeManager():
                                segment_number = segment_id,
                                main_file_path=self.settings.project_audio_path,
                                split_timestamp = split_timestamp,
-                               trim_file_path=trim_file_path,
-                               split_file_path=split_file_path)
+                               split_file_path=split_file_path,                               
+                               trim_file_path=trim_file_path)
             self.__task_list.append(task)
 
     def get(self) -> list[Task]:
