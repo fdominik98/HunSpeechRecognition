@@ -73,7 +73,7 @@ class MainWindow(CTkToplevel):
                                                                             self.result_prev_frame.on_process_state_change],
                                                          split_audio_manager=split_audio_manager,
                                                          trimmed_audio_manager=trimmed_audio_manager,
-                                                         progress_queues=self.thread_manager.progress_queues)
+                                                         progress_data=self.thread_manager.progress_data)
         self.audio_preview_frame.trim_switch_flip_callbacks.append(self.process_control_frame.on_trim_switch_flipped)
         
         self.right_sidebar_frame.grid_columnconfigure(0, weight=1)

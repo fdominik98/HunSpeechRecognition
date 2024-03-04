@@ -7,11 +7,12 @@ from managers.result_manager import ResultManager
 from models.process_state import ProcessState, non_trimming_options
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
 from utils.general_utils import to_timestamp_sec
+from models.progress_data import ProgressData
 
 class ProcessControlFrame(CTkFrame):
     def __init__(self, parent, row, column, settings: Settings, result_manager : ResultManager,
                 process_state_change_callbacks : list, split_audio_manager: SplitAudioFileManager,
-                trimmed_audio_manager: TrimmedAudioFileManager, progress_queues : dict[str, Queue]):
+                trimmed_audio_manager: TrimmedAudioFileManager, progress_data : ProgressData):
         super().__init__(parent, height=70)
         self.process_state_change_callbacks : list = process_state_change_callbacks
         self.settings : Settings = settings
@@ -19,8 +20,7 @@ class ProcessControlFrame(CTkFrame):
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
         self.start_time : datetime = datetime.now()
-        self.progress_queues = progress_queues
-        self.progress_values : dict[str, int] = {'split' : 0, 'trim' : 0, 'trans' : 0}
+        self.progress_data = progress_data
 
         self.process_state : ProcessState = ProcessState.STOPPED
         self.trim_enabled = settings.trim_switch_var
@@ -99,19 +99,16 @@ class ProcessControlFrame(CTkFrame):
             return
         self.progress_time_label.configure(text=to_timestamp_sec((datetime.now() - self.start_time).seconds)) 
 
-        self.refresh_progress_data()
-
         if self.process_state is ProcessState.SPLITTING:
-            new_value = self.progress_values['split']
+            new_value = self.progress_data.get_split_progress()
         elif self.process_state is ProcessState.TRIMMING or self.process_state is ProcessState.SPLITTING_TRIMMING:
-            new_value = self.progress_values['trim']
+            new_value = self.progress_data.get_trim_progress()
         elif (self.process_state is ProcessState.TRANSCRIPTING or
                 self.process_state is ProcessState.SPLITTING_TRANSCRIPTING or
                 self.process_state is ProcessState.TRIMMING_TRANSCRIPTING or
                 self.process_state is ProcessState.SPLITTING_TRIMMING_TRANSCRIPTING):
-            new_value = self.progress_values['trans']
+            new_value = self.progress_data.get_trans_progress()
         else:
-            self.progress_values = {'split' : 0, 'trim' : 0, 'trans' : 0}
             new_value = 0
 
         new_value = float(new_value) / self.settings.chunk_count()
@@ -122,15 +119,6 @@ class ProcessControlFrame(CTkFrame):
             self.switch_to_stop_mode()
             self.__call_process_state_change_callbacks(old_process_state, False)
         self.after(1000, self.update_progress)
-
-    def refresh_progress_data(self):
-        if not self.progress_queues['split'].empty():
-            self.progress_values['split'] = self.progress_queues['split'].get()
-        if not self.progress_queues['trim'].empty():
-            self.progress_values['trim'] = self.progress_queues['trim'].get()
-        if not self.progress_queues['trans'].empty():
-            self.progress_values['trans'] = self.progress_queues['trans'].get()
-
 
     def switch_to_process_mode(self): 
         self.start_time = datetime.now()

@@ -8,6 +8,7 @@ from threads.audio_trimmer_thread import AudioTrimmerThread
 from threads.pipeline_manager_thread import PipelineManagerThread
 from threads.init_manager_thread import InitManagerThread
 from models.pipeline_process import PipelineProcess
+from models.progress_data import ProgressData
 
 class ThreadManager():
     def __init__(self, settings : Settings, pipeline_process : PipelineProcess, error_callback) -> None:
@@ -17,7 +18,7 @@ class ThreadManager():
 
         self.init_pipeline_queue : Queue = Queue()
 
-        self.progress_queues : dict[str, Queue] = {'split' : Queue(), 'trim' : Queue(), 'trans' : Queue()}
+        self.progress_data = ProgressData()
 
         self.init_manager_thread  = InitManagerThread(settings=settings, error_callback=self.error_callback)
         self.init_manager_thread.start()
@@ -50,8 +51,8 @@ class ThreadManager():
         if self.splitter_thread is not None:
             self.splitter_thread.join()
         if not (old_process_state is ProcessState.SPLITTING or
-                 old_process_state is ProcessState.SPLITTING or
-                   old_process_state is ProcessState.SPLITTING):
+                 old_process_state is ProcessState.SPLITTING_TRIMMING or
+                   old_process_state is ProcessState.TRIMMING):
             self.pipeline_manager_thread.reset()
 
 
@@ -71,7 +72,7 @@ class ThreadManager():
                                 output_queue=output_queue,
                                 split_audio_manager=self.init_manager_thread.split_audio_manager,
                                 trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
-                                progress_queue=self.progress_queues['split'])
+                                progress_data=self.progress_data)
         self.splitter_thread.start()
         
     def start_trimmer_thread(self, input_queue : Queue, output_queue : Queue):
@@ -81,7 +82,7 @@ class ThreadManager():
                                         output_queue=output_queue,
                                         split_audio_manager=self.init_manager_thread.split_audio_manager,
                                         trimmed_audio_manager=self.init_manager_thread.trimmed_audio_manager,
-                                        progress_queue=self.progress_queues['trim'])
+                                        progress_data=self.progress_data)
         self.trimmer_thread.start()
 
     def start_pipeline_manager_thread(self):
@@ -90,7 +91,7 @@ class ThreadManager():
                                 result_manager=self.init_manager_thread.result_manager,
                                 error_callback=self.error_callback,
                                 init_pipeline_queue=self.init_pipeline_queue,
-                                progress_queue=self.progress_queues['trans'])
+                                progress_data=self.progress_data)
         self.pipeline_manager_thread.start()
 
 
@@ -146,9 +147,4 @@ class ThreadManager():
     def init_processing(self):
         while not self.pipeline_manager_thread.input_queue.empty():
             self.pipeline_manager_thread.input_queue.get()
-        while not self.progress_queues['split'].empty():
-            self.progress_queues['split'].get()
-        while not self.progress_queues['trim'].empty():
-            self.progress_queues['trim'].get()
-        while not self.progress_queues['trans'].empty():
-            self.progress_queues['trans'].get()
+        self.progress_data.reset()

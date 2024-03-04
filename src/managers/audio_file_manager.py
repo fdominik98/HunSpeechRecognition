@@ -49,7 +49,7 @@ class AudioFileManager(LoadableManager, ABC):
             for path in self._path_list:
                 file = self.load_file(path)
                 if file is not None:
-                    self._size = self._size + 1
+                    self._size += 1
                     res.append(file)
             return res
 
@@ -81,7 +81,7 @@ class AudioFileManager(LoadableManager, ABC):
                                             "is_place_holder" : audio_file.is_place_holder}
             with open(info_path, 'w') as f:
                 json.dump(data_to_store, f)              
-            self._size = self._size + 1
+            self._size += 1
 
     def __delete_file_safe(self, file_path) -> bool:
         info_path = AudioFileManager.get_info_path(file_path)
@@ -104,7 +104,7 @@ class AudioFileManager(LoadableManager, ABC):
     def __do_delete_audio_file(self, path : str) -> Optional[int]:
         if path in self._path_list and self.exists(path):        
             if self.__delete_file_safe(path):
-                self._size = self._size - 1
+                self._size -= 1
                 return self._path_list.index(path)
         return None
     
@@ -129,7 +129,7 @@ class AudioFileManager(LoadableManager, ABC):
         
     def get_prev(self, audio_file : AudioFile) -> Optional[AudioFile]:
         with self._lock:
-            index = self._path_list.index(audio_file.file_path) + - 1
+            index = self._path_list.index(audio_file.file_path) - 1
             if index >= len(self._path_list) or index < 0:
                 return None
             return self.load_file(self._path_list[index])

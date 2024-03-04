@@ -7,26 +7,25 @@ from models.task import Task
 from models.audio_file import AudioFile
 from models.settings import Settings
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
+from models.progress_data import ProgressData
 
 
 class AudioTrimmerThread(SpeechBaseThread): 
     def __init__(self, settings : Settings, error_callback,
                   input_queue : Queue, output_queue : Queue, split_audio_manager : SplitAudioFileManager,
-                  trimmed_audio_manager : TrimmedAudioFileManager, progress_queue : Queue):
+                  trimmed_audio_manager : TrimmedAudioFileManager, progress_data : ProgressData):
         super().__init__('AudioTrimmerThread', settings, error_callback)
         self.input_queue : Queue = input_queue
         self.output_queue : Queue = output_queue
-        self.progress_queue : Queue = progress_queue
+        self.progress_data : ProgressData = progress_data
         self.split_audio_manager : SplitAudioFileManager = split_audio_manager
         self.trimmed_audio_manager : TrimmedAudioFileManager = trimmed_audio_manager
-        self.__ready_tasks = 0
 
     def do_run(self):
         while not self.stopped():
             if not self.input_queue.empty():        
                 processed = self.process_file(self.input_queue.get())
-                self.__ready_tasks += 1
-                self.progress_queue.put(self.__ready_tasks)
+                self.progress_data.step_trim_progress()
                 if processed:
                     sleep(0.3)  
             else:

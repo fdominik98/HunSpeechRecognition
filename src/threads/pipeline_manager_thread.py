@@ -8,26 +8,25 @@ from threads.speech_base_thread import SpeechBaseThread
 from managers.result_manager import ResultManager
 from models.pipeline_process import PipelineProcess
 from managers.audio_file_manager import AudioFileManager
+from models.progress_data import ProgressData
 
 class PipelineManagerThread(SpeechBaseThread): 
 
     def __init__(self, settings : Settings, process: PipelineProcess,
                  result_manager : ResultManager, error_callback,
-                 init_pipeline_queue : ThreadQueue, progress_queue : ThreadQueue):
+                 init_pipeline_queue : ThreadQueue, progress_data : ProgressData):
         super().__init__('PipelineManagerThread', settings, error_callback)
         self.process = process
         self.result_manager : ResultManager = result_manager
         self.input_queue : ThreadQueue = ThreadQueue()
         self.init_pipeline_queue : ThreadQueue = init_pipeline_queue
-        self.progress_queue : ThreadQueue = progress_queue
+        self.progress_data : ProgressData = progress_data
         self.__reset_event = Event()
-        self.__ready_tasks = 0
 
     def do_run(self):
         while not self.stopped():
             self.init_process()
 
-            self.__ready_tasks = 0
             self.__reset_event.clear() 
 
             while not self.stopped() and not self.reseted():   
@@ -36,8 +35,7 @@ class PipelineManagerThread(SpeechBaseThread):
 
                 if not self.process.output_queue.empty():
                     self.save_results(self.process.output_queue.get())
-                    self.__ready_tasks += 1
-                    self.progress_queue.put(self.__ready_tasks)
+                    self.progress_data.step_trans_progress()
                 sleep(1)
 
             self.process.terminate()
@@ -75,6 +73,7 @@ class PipelineManagerThread(SpeechBaseThread):
 
         if any(r.chunk_id == task.chunk_id for r in self.result_manager.get_all()):
             print(f'{task.result_file_path} already processed, skipping..')
+            self.progress_data.step_trans_progress()
             return
         
         if task.is_place_holder:

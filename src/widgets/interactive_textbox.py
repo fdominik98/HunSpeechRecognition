@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from customtkinter import CTkTextbox, END, CURRENT, NONE
+from customtkinter import CTkTextbox, END, CURRENT, NONE, NORMAL, DISABLED
 from utils.fonts import textbox_font, blue_theme_color
 from managers.result_manager import ResultManager
 from managers.audio_file_manager import AudioFileManager, SplitAudioFileManager, TrimmedAudioFileManager
@@ -25,11 +25,12 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.cursor_tag = 'cursor_tag'
         self.tag_config(self.cursor_tag, background=blue_theme_color)
 
-        self.configure(state="disabled")
+        self.configure(state=DISABLED)
 
     def on_text_click(self, event):
         current_row_id = self.__get_clicked_row() - 1
         if current_row_id >= self.row_count():
+            self.unselect_all()
             return
         if self.has_selected() and self.row_object_map[current_row_id] in self.selected_object_ids:
             self.unselect_all()
@@ -43,6 +44,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
     def on_ctrl_click(self, event):
         current_row_id = self.__get_clicked_row() - 1
         if current_row_id >= self.row_count():
+            self.unselect_all()
             return
         if self.has_selected() and self.row_object_map[current_row_id] in self.selected_object_ids:
             self.unselect(current_row_id)
@@ -75,7 +77,8 @@ class InteractiveTextbox(CTkTextbox, ABC):
         pass
 
     def __get_clicked_row(self) -> int:
-        return int(self.index(CURRENT).split('.')[0])
+        index = int(self.index(CURRENT).split('.')[0])
+        return index
 
     def on_text_double_click(self, event):
         self.on_text_click(event)
@@ -84,7 +87,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
     def insert(self, object_id : int, text : str):
         if object_id in self.row_object_map:
             return
-        self.configure(state='normal')
+        self.configure(state=NORMAL)
         row_id = self.row_count()
         if len(self.row_object_map) == 0 or self.row_object_map[-1] > object_id:       
             for i, obj in enumerate(self.row_object_map):
@@ -94,24 +97,24 @@ class InteractiveTextbox(CTkTextbox, ABC):
 
         super().insert(f'{row_id + 1}.0', text + '\n')
         self.row_object_map.insert(row_id, object_id)
-        self.configure(state='disabled')
+        self.configure(state=DISABLED)
 
     def delete(self, object_id : int):
         row_id = self._find(object_id)
         if row_id is None:
             return
-        self.configure(state='normal')
+        self.configure(state=NORMAL)
         start_index = f'{row_id + 1}.0'
-        end_index = f'{row_id + 2}.0'
+        end_index = f'{row_id + 1}.0 lineend + 1c'
         super().delete(start_index, end_index)
         self.row_object_map.remove(object_id)
-        self.configure(state='disabled')
+        self.configure(state=DISABLED)
 
     def clear(self):
-        self.configure(state='normal')
+        self.configure(state=NORMAL)
         super().delete('1.0', END)
         self.row_object_map.clear()
-        self.configure(state='disabled')
+        self.configure(state=DISABLED)
 
 
     def row_count(self):
@@ -127,10 +130,9 @@ class AudioInteractiveTextbox(InteractiveTextbox):
         self.audio_file_manager : AudioFileManager = audio_file_manager
 
     def _load_file(self, object_id):
-        if object_id > self.audio_file_manager.size() - 1:
-            return
         audio_file = self.audio_file_manager.get_by_index(object_id)
-        self.audio_load_callback(self.audio_file_manager, audio_file)
+        if audio_file is not None:
+            self.audio_load_callback(self.audio_file_manager, audio_file)
 
 class ResultInteractiveTextbox(InteractiveTextbox):
     def __init__(self, result_manager : ResultManager, split_audio_file_manager: SplitAudioFileManager,
@@ -141,7 +143,7 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         self.split_audio_file_manager = split_audio_file_manager
         self.trimmed_audio_file_manager = trimmed_audio_file_manager
 
-        self.configure(state="normal")
+        self.configure(state=NORMAL)
 
     def _load_file(self, object_id): 
         result = self.result_manager.get_by_id(object_id)
@@ -154,7 +156,8 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         else:
             return
         audio_file = audio_file_manager.get_audio_by_result(result)
-        self.audio_load_callback(audio_file_manager, audio_file, result)
+        if audio_file is not None:
+            self.audio_load_callback(audio_file_manager, audio_file, result)
 
     def refresh_cursor_position(self, audio_file : Optional[AudioFile], elapsed_time : float):
         self.tag_remove(self.cursor_tag, '1.0', END)

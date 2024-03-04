@@ -153,8 +153,8 @@ class AudioPreviewFrame(CTkFrame):
             for selected in objects_to_delete:
                 audio_file = self.split_audio_manager.get_by_index(selected)
                 self.audio_stop_callback()
-                self.split_audio_manager.delete_audio_file(audio_file)
-                self.split_textbox.delete(audio_file.chunk_id)
+                if self.split_audio_manager.delete_audio_file(audio_file) is not None:
+                    self.split_textbox.delete(audio_file.chunk_id)
     
     def __delete_all_trimmed_content(self):
         response = messagebox.askyesno("Törlés", "Biztosan törlöd a vágott szegmenseket?")
@@ -172,8 +172,8 @@ class AudioPreviewFrame(CTkFrame):
             for selected in objects_to_delete:
                 audio_file = self.trimmed_audio_manager.get_by_index(selected)
                 self.audio_stop_callback()
-                self.trimmed_audio_manager.delete_audio_file(audio_file)
-                self.trim_textbox.delete(audio_file.chunk_id)
+                if self.trimmed_audio_manager.delete_audio_file(audio_file) is not None:
+                    self.trim_textbox.delete(audio_file.chunk_id)
 
     def on_process_state_change(self, old_process_state : ProcessState, process_state : ProcessState, trim_enabled : bool, forced : bool):
         if process_state is ProcessState.STOPPED:

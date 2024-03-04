@@ -18,8 +18,8 @@ class AudioPlayerFrame(CTkFrame):
     def __init__(self, parent : CTkFrame, row, column, settings : Settings):
         super().__init__(parent, height=80)
         self.settings = settings
-        self.refresh_cursor_position_callbacks = []
-        self.stop_playing_callbacks = []
+        self.refresh_cursor_position_callbacks : list = []
+        self.stop_playing_callbacks : list = []
 
         pygame.init()
         pygame.mixer.init()
@@ -67,7 +67,6 @@ class AudioPlayerFrame(CTkFrame):
         self.end_time_label.grid(row=1, column=3, sticky='en', pady=30)
 
         self.volume_slider = CTkSlider(self, from_=0, to=100, width=20, button_color='grey', orientation=VERTICAL, height=80, command=self.adjust_volume)
-        self.volume_slider.set(50)  # Set the initial volume to 100%
         self.volume_slider_preview = 0
         self.volume_slider.grid(row=1, column=4, padx=(30, 10), pady=0, sticky="sn")
         self.volume_slider.bind("<Motion>", self.on_volume_slider_hover)
@@ -80,6 +79,7 @@ class AudioPlayerFrame(CTkFrame):
         self.min_volume_label.grid(row=2, column=4, pady=(0, 10), sticky='nw')
 
         self.min_volume_label.bind("<Button-1>", lambda e, vol=0: self.adjust_volume(vol))
+        self.adjust_volume(settings.player_volume)
 
 
         self.plot_button = CTkButton(self, text="", image=self.eye_icon, corner_radius=30, width=40, command=self.plot_amplitude)
@@ -196,6 +196,7 @@ class AudioPlayerFrame(CTkFrame):
         pygame.mixer.music.set_volume(float(volume) / 100)
         self.min_volume_label.configure(text=int(round(volume)))
         self.volume_slider.set(volume)
+        self.settings.player_volume = volume
         if volume > 0:
             self.min_volume_label.configure(image=self.speaker_icon)
         else:
