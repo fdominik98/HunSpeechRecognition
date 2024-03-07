@@ -59,11 +59,30 @@ def to_timestamp_1dec(seconds):
 def timestamp_str(timestamp: tuple[float, float]) -> str:
     return f'{to_timestamp_sec(timestamp[0])} - {to_timestamp_sec(timestamp[1])}'
 
+# Boyer Moore Pattern Matching algorithm
+def search_in_text(text : str, pattern : str) -> list[int]:
+    M = len(pattern)
+    N = len(text)
+    skip = 0
+    res = []
+    map = [-1] * 512
 
+    for j in range(M):
+        map[ord(pattern[j])] = j
 
+    i = 0
+    while i <= N - M:
+        skip = 0
+        j = M - 1
+        while j >= 0:
+            if pattern[j] != text[i + j]:
+                skip = max(1, j - map[ord(text[i + j])])
+                break
+            j -= 1
 
+        if skip == 0:
+            res.append(i)
+            skip += 1
 
-   
-
-
-
+        i += skip
+    return res

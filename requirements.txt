@@ -10,7 +10,9 @@ pydantic_yaml[ruamel, pyyaml]==0.8.1
 pillow==10.2.0
 faster-whisper==0.10.0
 tkinter-tooltip==3.0.0
-torch==2.2.0
+torch @ https://download.pytorch.org/whl/cu117/torch-2.0.1%2Bcu117-cp310-cp310-win_amd64.whl
+torchvision @ https://download.pytorch.org/whl/cu117/torchvision-0.15.2%2Bcu117-cp310-cp310-win_amd64.whl
+torchaudio @ https://download.pytorch.org/whl/cu117/torchaudio-2.0.2%2Bcu117-cp310-cp310-win_amd64.whl
 pyinstaller==6.4.0
 pylint==3.0.3
 pydub==0.25.1
