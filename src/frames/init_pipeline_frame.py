@@ -1,5 +1,6 @@
 from queue import Queue
 from customtkinter import CTkFrame, CTkProgressBar
+from models.pipeline_process import ModelInitState
 
 
 class InitPipelineFrame(CTkFrame):
@@ -31,9 +32,9 @@ class InitPipelineFrame(CTkFrame):
         
         if not self.init_pipeline_queue.empty():
             init_state = self.init_pipeline_queue.get()
-            if init_state == 'started':
+            if init_state is ModelInitState.INIT_STARTED:
                 self.pipeline_init_start_callback()
-            elif init_state == 'finished':
+            elif init_state is ModelInitState.INIT_FINISHED:
                 self.init_finish_callback()
         
         self.after(500, self.update_frame)

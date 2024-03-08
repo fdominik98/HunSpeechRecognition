@@ -6,7 +6,7 @@ from models.segment import Segment
 from models.settings import Settings
 from threads.speech_base_thread import SpeechBaseThread
 from managers.result_manager import ResultManager
-from models.pipeline_process import PipelineProcess
+from models.pipeline_process import PipelineProcess, ModelInitState
 from managers.audio_file_manager import AudioFileManager
 from models.progress_data import ProgressData
 
@@ -43,14 +43,15 @@ class PipelineManagerThread(SpeechBaseThread):
 
 
     def init_process(self):
+        self.init_pipeline_queue.put(ModelInitState.INIT_STARTED)
+        
         if not self.process.is_alive():
             self.process = PipelineProcess()
             self.process.start()
         
-        self.init_pipeline_queue.put("started")
         while not self.stopped():
-            if self.process.parent_conn.poll() and self.process.parent_conn.recv() == 'init_finished':                
-                self.init_pipeline_queue.put("finished")
+            if self.process.init_parent_conn.poll() and self.process.init_parent_conn.recv() is ModelInitState.INIT_FINISHED:                
+                self.init_pipeline_queue.put(ModelInitState.INIT_FINISHED)
                 break
             sleep(0.5)      
 

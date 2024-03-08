@@ -17,6 +17,7 @@ class AudioFile():
         self.file_path = file_path
         self.absolute_timestamp = absolute_timestamp
         self.is_place_holder = is_place_holder
+        self.length = self.absolute_timestamp[1] - self.absolute_timestamp[0]
 
     def __str__(self) -> str:
         if self.is_place_holder:
@@ -25,9 +26,4 @@ class AudioFile():
     
     def exists(self) -> bool:
          return os.path.exists(self.file_path)
-
-    def length(self) -> float:
-        return self.absolute_timestamp[1] - self.absolute_timestamp[0]
-
-
 

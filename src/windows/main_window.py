@@ -38,7 +38,7 @@ class MainWindow(CTkToplevel):
                                                     split_audio_file_manager=split_audio_manager,
                                                     trimmed_audio_file_manager=trimmed_audio_manager,
                                                     audio_load_callback=self.audio_player_frame.load,
-                                                    audio_play_callback=self.audio_player_frame.play)
+                                                    audio_play_callback=self.audio_player_frame.on_play)
         self.audio_player_frame.refresh_cursor_position_callbacks.append(self.result_prev_frame.textbox.refresh_cursor_position)
         self.audio_player_frame.stop_playing_callbacks.append(self.result_prev_frame.textbox.unselect_all)
         
@@ -58,8 +58,8 @@ class MainWindow(CTkToplevel):
                                                      trimmed_audio_manager=trimmed_audio_manager,
                                                      original_audio_manager=original_audio_manager,
                                                      audio_load_callback=self.audio_player_frame.load,
-                                                     audio_play_callback=self.audio_player_frame.play,
-                                                    audio_stop_callback=self.audio_player_frame.stop)  
+                                                     audio_play_callback=self.audio_player_frame.on_play,
+                                                    audio_stop_callback=self.audio_player_frame.on_stop)  
         self.audio_player_frame.stop_playing_callbacks.append(self.audio_preview_frame.split_textbox.unselect_all)
         self.audio_player_frame.stop_playing_callbacks.append(self.audio_preview_frame.trim_textbox.unselect_all)
 

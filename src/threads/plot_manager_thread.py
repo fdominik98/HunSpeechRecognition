@@ -18,7 +18,7 @@ class PlotManagerThread(SpeechBaseThread):
 
     def do_run(self):
         self.audio_file = self.audio_manager.get_by_path(self.audio_file.file_path)
-        if self.audio_file is None or self.audio_file.length() > 60:
+        if self.audio_file is None or self.audio_file.length > 60:
             return
 
         audio = AudioSegment.from_wav(self.audio_file.file_path)
@@ -59,7 +59,7 @@ class PlotManagerThread(SpeechBaseThread):
         canvas.draw()
 
 
-    def on_error(self, name):
+    def on_error(self, e, name):
         pass
 
 

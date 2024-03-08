@@ -1,11 +1,11 @@
 import subprocess
-from pydub.audio_segment import AudioSegment, AUDIO_FILE_EXT_ALIASES, fix_wav_headers
+from pydub.audio_segment import AudioSegment as AS, AUDIO_FILE_EXT_ALIASES, fix_wav_headers
 from pydub.utils import _fd_or_path_or_tempfile, fsdecode, mediainfo_json
 from pydub.logging_utils import log_conversion
 from pydub.exceptions import  CouldntDecodeError
 from custom_pydub.utils import run_ffmpeg_command
 
-class AudioSegment(AudioSegment):
+class AudioSegment(AS):
     @classmethod
     def from_file(cls, file, format=None, codec=None, parameters=None, start_second=None, duration=None, **kwargs):
         orig_file = file

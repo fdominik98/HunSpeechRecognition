@@ -34,16 +34,29 @@ def get_app_data_path() -> str:
         if EXEC_MODE == 'dev':
             return os.environ['HUNSPEECH_DEV_PATH']
         elif EXEC_MODE == 'prod':
-            appname = os.path.basename(os.environ['HUNSPEECH_PATH'])
-            appdata = os.environ['APPDATA']
-            return f'{appdata}/{appname}'
+             return os.environ['HUNSPEECH_APPDATA']
         else:
             raise Exception('Hibás futtátasi mód. (Environment.py)')
     except:
-        raise Exception('A roaming data könyvtár nem található. Ellenőrizd a környezeti változókat.')
+        raise Exception('A roaming data könyvtár nem található. Ellenőrizd a környezeti változókat, esetleg inditsd újra a számitógépet.')
     
-def get_images_path():
+def get_images_path() -> str:
     return f'{get_root_path()}/images'
+
+def get_whisper_model_path() -> str:
+    return f'{get_app_data_path()}/whisper_models'
+
+def get_environment_folder_path() -> str:
+    return f'{get_app_data_path()}/environment'
+
+def get_environment_file_path() -> str:
+    return f'{get_environment_folder_path()}/environment.yaml'
+
+def get_log_folder_path() -> str:
+    return f'{get_app_data_path()}/log'
+
+def get_log_file_path() -> str:
+    return f'{get_log_folder_path()}/output.log'
     
 def add_to_path(path : str):
     current_path = os.environ.get('PATH', '')

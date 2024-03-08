@@ -24,11 +24,11 @@ def open_message(parent : CTkToplevel, title : str, message : str):
     parent.message_window.lift()
     parent.message_window.attributes('-topmost', True)
 
-def open_plot(parent : CTkToplevel, title : str, audio_manager, audio_file) -> PlotWindow:        
+def open_plot(parent : CTkToplevel, audio_manager, audio_file) -> PlotWindow:        
     parent.plot_window = PlotWindow(audio_manager, audio_file, master=parent)
     center_window(parent.plot_window, 850, 500)
     parent.plot_window.iconbitmap(f'{get_images_path()}/icon.ico')
-    parent.plot_window.title(title)       
+    parent.plot_window.title(audio_file.file_path)       
     parent.plot_window.lift()
     parent.plot_window.attributes('-topmost', True)
     parent.plot_window.attributes('-topmost', False)

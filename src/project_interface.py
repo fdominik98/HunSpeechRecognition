@@ -7,7 +7,7 @@ from utils.general_utils import empty, get_text
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from windows.main_window import MainWindow
-from models.pipeline_process import PipelineProcess
+from models.pipeline_process import PipelineProcess, ModelInitState
 from managers.environment_manager import EnvironmentManager
 from models.environment import get_images_path
 from custom_logging.setup_logging import setup_logging
@@ -29,6 +29,10 @@ class ProjectInterface(CTk):
     
     def __init__(self):
         super().__init__()
+
+        self.pipeline_process = PipelineProcess()
+        self.pipeline_process.start()
+
         self.message_window = None
         self.project_loader_thread : Optional[ProjectLoaderThread] = None
         self.main_app_window : Optional[MainWindow] = None
@@ -79,16 +83,20 @@ class ProjectInterface(CTk):
         self.create_project_button.grid(row=7, column=0, padx=20, pady=10, sticky='nsew')
 
         self.loading_progressbar = CTkProgressBar(self, orientation="horizontal", height=10, corner_radius=0, determinate_speed=2.5)
-        self.loading_progressbar.grid(row=8, column=0, padx=20, pady=10, sticky="wsne") 
+        self.loading_progressbar.grid(row=8, column=0, padx=20, pady=(10, 5), sticky="wsne") 
         self.loading_progressbar.grid_remove()  
+
+        self.loading_label = CTkLabel(self, text="", height=10, bg_color='transparent', fg_color='transparent')
+        self.loading_label.grid(row=9, column=0, padx=20, pady=(0, 10), sticky='wsne')
+        self.loading_label.grid_remove()
 
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
 
         self.init_project_folder(self.environment_manager.get_last_project_dir())            
 
-        self.pipeline_process = PipelineProcess()
-        self.pipeline_process.start()
+        self.__set_loading_state('')
+        self.__handle_process_on_startup()
 
 
     def __center_pname_textbox(self):
@@ -182,7 +190,7 @@ class ProjectInterface(CTk):
         
         os.makedirs(project_dir)        
         self.project_loader_thread = ProjectCreatorThread(self.load_error_callback, self.environment_manager, project_dir, input_file, project_name) 
-        self.__set_loading_state()
+        self.__set_loading_state('Projekt létrehozása')
         self.project_loader_thread.start()
         self.__open_main_application()
 
@@ -193,7 +201,7 @@ class ProjectInterface(CTk):
             open_message(self, 'hiba', 'A projekt nem található.')
             return
         self.project_loader_thread = ProjectLoaderThread(self.load_error_callback, self.environment_manager, directory)
-        self.__set_loading_state()
+        self.__set_loading_state('Projekt betöltése')
         self.project_loader_thread.start()
         self.__open_main_application()
 
@@ -232,19 +240,40 @@ class ProjectInterface(CTk):
     def __unset_loading_state(self):
         self.loading_state = False
         self.loading_progressbar.grid_remove()  
+        self.loading_label.grid_remove()
         self.loading_progressbar.stop()
         self.init_project_folder(get_text(self.project_folder_textbox))
 
-    def __set_loading_state(self):
-        self.loading_state = True
-        self.loading_progressbar.grid()  
-        self.loading_progressbar.start()
-        self.load_project_button.configure(state=DISABLED)
-        self.create_project_button.configure(state=DISABLED)
-        self.project_name_textbox.configure(state=DISABLED)
+    def __set_loading_state(self, label_text : str):
+        self.loading_label.configure(text=label_text)
+        if not self.loading_state:
+            self.loading_state = True
+            self.loading_progressbar.grid()
+            self.loading_progressbar.start()
+            self.loading_label.grid()  
+            self.load_project_button.configure(state=DISABLED)
+            self.create_project_button.configure(state=DISABLED)
+            self.project_name_textbox.configure(state=DISABLED)
 
 
-
+    def __handle_process_on_startup(self):        
+        if self.pipeline_process.download_parent_conn.poll():
+            state : ModelInitState = self.pipeline_process.download_parent_conn.recv()
+            if state is ModelInitState.CHECKING_FOR_MODEL:
+                self.__set_loading_state('Model keresése')
+            elif state is ModelInitState.CHECKING_FOR_CONN:
+                self.__set_loading_state('Hálózati kapcsolat ellenőrzés')
+            elif state is ModelInitState.DOWNLOADING_MODEL:
+                self.__set_loading_state('Model letöltése')
+            elif state is ModelInitState.MODEL_FOUND:
+                self.__unset_loading_state()
+                return
+            elif state is ModelInitState.NO_CONN:
+                self.__set_loading_state('Nincs hálózati kapcsolat. Csatlakozz az internethez!')
+            elif state is ModelInitState.ERROR:
+                pass
+        self.after(300, self.__handle_process_on_startup)
+            
 def main():
     app = ProjectInterface()
     app.mainloop()
