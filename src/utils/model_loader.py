@@ -2,8 +2,6 @@ import requests
 import os
 import psutil
 from py3nvml.py3nvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo, nvmlShutdown, NVMLError
-from faster_whisper import download_model
-from models.environment import get_whisper_model_path
 
 def check_gpu():
     try:

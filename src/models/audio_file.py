@@ -1,5 +1,4 @@
 import os
-from typing import Optional
 from enum import Enum, unique
 from utils.general_utils import timestamp_str
 
@@ -26,4 +25,9 @@ class AudioFile():
     
     def exists(self) -> bool:
          return os.path.exists(self.file_path)
+
+    def __eq__(self, other):
+        if isinstance(other, AudioFile):
+            return self.chunk_id == other.chunk_id and self.file_path == other.file_path
+        return False
 

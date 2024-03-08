@@ -230,7 +230,8 @@ class AudioPlayerFrame(CTkFrame):
             self.on_stop()
             return
 
-        self.audio_player = AudioPlayer(file_manager, audio_file, self.volume_slider.get())
+        if self.audio_player is None or audio_file != self.audio_player.audio_file:
+            self.audio_player = AudioPlayer(file_manager, audio_file, self.volume_slider.get())
 
         if result is not None:
             elapsed_time = result.relative_timestamp[0]

@@ -3,7 +3,7 @@ from models.settings import Settings
 from models.process_state import ProcessState
 from frames.audio_player_frame import AudioPlayerFrame
 from frames.init_pipeline_frame import InitPipelineFrame
-from frames.audio_preview_frame import AudioPreviewFrame
+from frames.audio_preview.audio_preview_frame import AudioPreviewFrame
 from frames.result_preview_frame import ResultPreviewFrame
 from frames.process_control_frame import ProcessControlFrame
 from utils.window_utils import open_message

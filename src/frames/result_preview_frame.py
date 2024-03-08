@@ -30,9 +30,9 @@ class ResultPreviewFrame(CTkFrame):
         self.search_label = CTkLabel(self, text="Keresés:", height=10, font=label_font())
         self.search_label.grid(row=0, padx=395, pady=(10,5), sticky="se")
 
-        search_entry_var = StringVar()
-        search_entry_var.trace_add("write", self.on_search_text_changed)
-        self.search_entry = CTkEntry(self, height=10, font=label_font(), textvariable=search_entry_var)
+        self.search_entry_var = StringVar()
+        self.search_entry_var.trace_add("write", self.on_search_text_changed)
+        self.search_entry = CTkEntry(self, height=10, font=label_font(), textvariable=self.search_entry_var)
         self.search_entry.grid(row=0, padx=250, pady=(10,0), sticky="se")
 
         self.search_result_label = CTkLabel(self, text="0/", height=10, font=label_font())
@@ -79,18 +79,17 @@ class ResultPreviewFrame(CTkFrame):
     def __delete_all_results(self):
         response = messagebox.askyesno("Törlés", "Biztos törlöd a összes feldolgozott szöveget?")
         if response:
+            self.__search_results = []
+            self.search_entry_var.set('')
+            self.search_by_value_entry_val.set('0')
             self.result_manager.delete_all()
             self.textbox.clear()
 
     def on_process_state_change(self, old_process_state : ProcessState, process_state : ProcessState, trim_enabled : bool, forced : bool):
         if process_state is ProcessState.STOPPED:
             self.delete_button.configure(state="normal")
-            self.search_entry.configure(state="normal")
-            self.search_by_value_entry.configure(state="normal")
         else:
             self.delete_button.configure(state="disabled")
-            self.search_entry.configure(state="disabled")
-            self.search_by_value_entry.configure(state="disabled")
 
     def selection_changed(self):
         pass
@@ -119,12 +118,18 @@ class ResultPreviewFrame(CTkFrame):
         self.__search_results = []
     
     def __go_to_next(self):
+            if len(self.__search_results) == 0:
+                self.search_by_value_entry_val.set('0')
+                return
             new_value = int(self.search_by_value_entry_val.get()) + 1
             if new_value > len(self.__search_results):
                 new_value = 1
             self.search_by_value_entry_val.set(str(new_value))
             
     def __go_to_previous(self):
+            if len(self.__search_results) == 0:
+                self.search_by_value_entry_val.set('0')
+                return
             new_value = int(self.search_by_value_entry_val.get()) - 1
             if new_value < 1:
                 new_value = len(self.__search_results)
@@ -147,6 +152,7 @@ class ResultPreviewFrame(CTkFrame):
         if not self.result_manager.insert_widget_queue.empty():
             result : ResultRow = self.result_manager.insert_widget_queue.get()
             self.textbox.insert(result.id, result.sentence)
+            self.on_search_text_changed()
             found = True
         if found:
             self.after(0, self.update_textbox)

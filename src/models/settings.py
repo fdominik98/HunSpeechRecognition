@@ -12,6 +12,7 @@ class Settings(YamlModel):
     project_audio_name : str = ''
     trim_switch_var : bool = True
     player_volume : int = 50
+    trim_dbfs_auto : bool = True
 
     def chunk_count(self):
         result = self.project_audio_duration / self.chunk_size

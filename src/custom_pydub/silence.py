@@ -14,18 +14,15 @@ def split_on_silence(settings : Settings, audio : AudioSegment) -> tuple[AudioSe
             next(b, None)
             return zip(a, b)
 
-        # output_ranges = [
-        #     [ start - keep_silence, end + keep_silence ]
-        #     for (start,end)
-        #         in detect_nonsilent(audio, silence_dur, settings.noise_treshold, 10)
-        # ]
-
-        avg_dbfs = audio.dBFS
+        if settings.trim_dbfs_auto:
+             treshold = audio.dBFS -5
+        else:
+             treshold = settings.noise_treshold
 
         output_ranges = [
             [ start - keep_silence, end + keep_silence ]
             for (start,end)
-                in detect_nonsilent(audio, silence_dur, avg_dbfs - 5, 10)
+                in detect_nonsilent(audio, silence_dur, treshold, 10)
         ]
 
         for range_i, range_ii in pairwise(output_ranges):

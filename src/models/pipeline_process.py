@@ -46,7 +46,7 @@ def check_for_cuda():
     except:
         print('Cuda is probably not installed on the system.')
 
-def init_model(download_conn, model_type, model_path):
+def load_model(download_conn, model_type, model_path):
     if check_whisper_model(model_type, model_path):
         return
    
@@ -66,7 +66,7 @@ def do_process_file(download_conn, init_conn, input_queue : ProcessQueue, output
     model_type, has_gpu = select_whisper_model_type()
     model_path = get_whisper_model_path()
 
-    init_model(download_conn, model_type, model_path)
+    load_model(download_conn, model_type, model_path)
     download_conn.send(ModelInitState.MODEL_FOUND)
 
     if has_gpu:

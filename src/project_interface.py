@@ -264,7 +264,7 @@ class ProjectInterface(CTk):
             elif state is ModelInitState.CHECKING_FOR_CONN:
                 self.__set_loading_state('Hálózati kapcsolat ellenőrzés')
             elif state is ModelInitState.DOWNLOADING_MODEL:
-                self.__set_loading_state('Model letöltése')
+                self.__set_loading_state('Model letöltése. Ne szakítsd meg az internet kapcsolatot!')
             elif state is ModelInitState.MODEL_FOUND:
                 self.__unset_loading_state()
                 return

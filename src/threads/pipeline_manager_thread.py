@@ -70,6 +70,7 @@ class PipelineManagerThread(SpeechBaseThread):
    
     def process_task(self, task : Task):  
         if not AudioFileManager.exists(task.result_file_path):
+            self.progress_data.step_trans_progress()
             return
 
         if any(r.chunk_id == task.chunk_id for r in self.result_manager.get_all()):
@@ -79,6 +80,7 @@ class PipelineManagerThread(SpeechBaseThread):
         
         if task.is_place_holder:
             self.process.output_queue.put(([Segment('', 0, 0)], task))
+            self.progress_data.step_trans_progress()
             return
         
         self.process.input_queue.put(task)
