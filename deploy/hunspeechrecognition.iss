@@ -9,6 +9,7 @@ Compression=lzma
 SolidCompression=yes
 UninstallDisplayIcon={app}\hunspeechrecognition.exe
 SetupIconFile=..\images\icon.ico
+AlwaysRestart=yes
 
 [Files]
 Source: "images\*"; DestDir: "{app}\images"; Flags: ignoreversion recursesubdirs createallsubdirs

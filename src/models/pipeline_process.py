@@ -1,13 +1,14 @@
 from time import sleep
 import shutil
 from multiprocessing import Queue as ProcessQueue, Pipe, Process
-from torch import cuda 
+from torch import cuda
 from faster_whisper import WhisperModel, download_model
 from models.task import Task
 from threads.pipeline_producer_thread import PipelineProducerThread
 from utils.model_loader import select_whisper_model_type, check_internet, check_whisper_model
 from models.environment import get_whisper_model_path
 from enum import Enum, unique
+
 
 @unique
 class ModelInitState(Enum):
@@ -25,9 +26,10 @@ class PipelineProcess(Process):
     def __init__(self) -> None:
         self.download_parent_conn, self.download_child_conn = Pipe()
         self.init_parent_conn, self.init_child_conn = Pipe()
-        self.input_queue : ProcessQueue = ProcessQueue()
-        self.output_queue : ProcessQueue = ProcessQueue()
-        super().__init__(target=do_process_file, name="Pipeline process", args=(self.download_child_conn, self.init_child_conn, self.input_queue, self.output_queue), daemon=True)
+        self.input_queue: ProcessQueue = ProcessQueue()
+        self.output_queue: ProcessQueue = ProcessQueue()
+        super().__init__(target=do_process_file, name="Pipeline process", args=(
+            self.download_child_conn, self.init_child_conn, self.input_queue, self.output_queue), daemon=True)
         self.download_child_conn.send(ModelInitState.CHECKING_FOR_MODEL)
 
     def terminate(self) -> None:
@@ -46,10 +48,11 @@ def check_for_cuda():
     except:
         print('Cuda is probably not installed on the system.')
 
+
 def load_model(download_conn, model_type, model_path):
     if check_whisper_model(model_type, model_path):
         return
-   
+
     download_conn.send(ModelInitState.CHECKING_FOR_CONN)
     while not check_internet():
         download_conn.send(ModelInitState.NO_CONN)
@@ -60,9 +63,9 @@ def load_model(download_conn, model_type, model_path):
     except Exception:
         shutil.rmtree(model_path)
         download_conn.send(ModelInitState.ERROR)
-        
 
-def do_process_file(download_conn, init_conn, input_queue : ProcessQueue, output_queue: ProcessQueue):
+
+def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue):
     model_type, has_gpu = select_whisper_model_type()
     model_path = get_whisper_model_path()
 
@@ -74,30 +77,21 @@ def do_process_file(download_conn, init_conn, input_queue : ProcessQueue, output
 
     num_producers = 3
 
-    model : WhisperModel = WhisperModel(model_type, device='auto',
-                                         num_workers=num_producers, download_root=model_path)
+    model: WhisperModel = WhisperModel(model_type, device='auto',
+                                       num_workers=num_producers, download_root=model_path)
     init_conn.send(ModelInitState.INIT_FINISHED)
 
-    producers : list[PipelineProducerThread] = []
+    producers: list[PipelineProducerThread] = []
     for id in range(num_producers):
         producer = PipelineProducerThread(id, model, output_queue)
         producers.append(producer)
         producer.start()
-        
-    
-    while(True):
-        task : Task = input_queue.get()
+
+    while (True):
+        task: Task = input_queue.get()
         while not any(producer.is_free() for producer in producers):
             sleep(1)
         for producer in producers:
             if producer.is_free():
                 producer.input_queue.put(task)
                 break
-
-
-
-
-
-
-
-

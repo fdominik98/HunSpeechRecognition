@@ -6,15 +6,17 @@ from managers.result_manager import ResultManager
 from managers.audio_file_manager import AudioFileManager, SplitAudioFileManager, TrimmedAudioFileManager
 from models.audio_file import AudioFile
 
+
 class InteractiveTextbox(CTkTextbox, ABC):
     def __init__(self, master, audio_load_callback, audio_play_callback, selection_changed_callback, width=200, height=200):
-        super().__init__(master, width=width, height=height, font=textbox_font(), text_color='black', fg_color='#D3D3D3', wrap=NONE)
+        super().__init__(master, width=width, height=height, font=textbox_font(),
+                         text_color='black', fg_color='#D3D3D3', wrap=NONE)
         self.audio_load_callback = audio_load_callback
         self.audio_play_callback = audio_play_callback
         self.selection_changed_callback = selection_changed_callback
 
         self.row_object_map = list()
-        self.selected_object_ids : list[int] = []
+        self.selected_object_ids: list[int] = []
 
         self.selected_tag = 'selected_tag'
         self.tag_config(self.selected_tag, background="#999999")
@@ -38,7 +40,8 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.unselect_all()
         self.selected_object_ids.append(self.row_object_map[current_row_id])
         self._load_file(self.selected_object_ids[0])
-        self.tag_add(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_add(self.selected_tag, f'{
+                     current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selection_changed_callback()
 
     def on_ctrl_click(self, event):
@@ -50,10 +53,11 @@ class InteractiveTextbox(CTkTextbox, ABC):
             self.unselect(current_row_id)
             return
         self.selected_object_ids.append(self.row_object_map[current_row_id])
-        self.tag_add(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_add(self.selected_tag, f'{
+                     current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selection_changed_callback()
 
-    def _find(self, object_id : int) -> Optional[int]:
+    def _find(self, object_id: int) -> Optional[int]:
         if object_id in self.row_object_map:
             return self.row_object_map.index(object_id)
         return None
@@ -67,8 +71,10 @@ class InteractiveTextbox(CTkTextbox, ABC):
     def unselect(self, current_row_id):
         if current_row_id >= self.row_count():
             return
-        self.tag_remove(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
-        self.tag_remove(self.cursor_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_remove(self.selected_tag, f'{
+                        current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_remove(self.cursor_tag, f'{
+                        current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selected_object_ids.remove(self.row_object_map[current_row_id])
         self.selection_changed_callback()
 
@@ -84,12 +90,12 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.on_text_click(event)
         self.audio_play_callback()
 
-    def insert(self, object_id : int, text : str):
+    def insert(self, object_id: int, text: str):
         if object_id in self.row_object_map:
             return
         self.configure(state=NORMAL)
         row_id = self.row_count()
-        if len(self.row_object_map) == 0 or self.row_object_map[-1] > object_id:       
+        if len(self.row_object_map) == 0 or self.row_object_map[-1] > object_id:
             for i, obj in enumerate(self.row_object_map):
                 if obj > object_id:
                     row_id = i
@@ -99,7 +105,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.row_object_map.insert(row_id, object_id)
         self.configure(state=DISABLED)
 
-    def delete(self, object_id : int):
+    def delete(self, object_id: int):
         row_id = self._find(object_id)
         if row_id is None:
             return
@@ -116,36 +122,36 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.row_object_map.clear()
         self.configure(state=DISABLED)
 
-
     def row_count(self):
         return len(self.row_object_map)
-    
+
     def has_selected(self) -> bool:
         return len(self.selected_object_ids) != 0
 
 
 class AudioInteractiveTextbox(InteractiveTextbox):
-    def __init__(self, audio_file_manager : AudioFileManager, *args, **kwargs):
+    def __init__(self, audio_file_manager: AudioFileManager, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.audio_file_manager : AudioFileManager = audio_file_manager
+        self.audio_file_manager: AudioFileManager = audio_file_manager
 
     def _load_file(self, object_id):
         audio_file = self.audio_file_manager.get_by_index(object_id)
         if audio_file is not None:
             self.audio_load_callback(self.audio_file_manager, audio_file)
 
+
 class ResultInteractiveTextbox(InteractiveTextbox):
-    def __init__(self, result_manager : ResultManager, split_audio_file_manager: SplitAudioFileManager,
-                 trimmed_audio_file_manager : TrimmedAudioFileManager,
-                  *args, **kwargs):
+    def __init__(self, result_manager: ResultManager, split_audio_file_manager: SplitAudioFileManager,
+                 trimmed_audio_file_manager: TrimmedAudioFileManager,
+                 *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.result_manager : ResultManager = result_manager
+        self.result_manager: ResultManager = result_manager
         self.split_audio_file_manager = split_audio_file_manager
         self.trimmed_audio_file_manager = trimmed_audio_file_manager
 
         self.configure(state=NORMAL)
 
-    def _load_file(self, object_id): 
+    def _load_file(self, object_id):
         result = self.result_manager.get_by_id(object_id)
         if result is None:
             return
@@ -159,23 +165,25 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         if audio_file is not None:
             self.audio_load_callback(audio_file_manager, audio_file, result)
 
-    def refresh_cursor_position(self, audio_file : Optional[AudioFile], elapsed_time : float):
+    def refresh_cursor_position(self, audio_file: Optional[AudioFile], elapsed_time: float):
         self.tag_remove(self.cursor_tag, '1.0', END)
         if audio_file is None:
             return
-        result = self.result_manager.get_result_by_audio(audio_file, elapsed_time)
+        result = self.result_manager.get_result_by_audio(
+            audio_file, elapsed_time)
         if result is None:
             return
         row_id = self._find(result.id)
         if row_id is None:
             return
-        ratio = (elapsed_time - result.relative_timestamp[0]) / (result.relative_timestamp[1] - result.relative_timestamp[0])
+        ratio = (elapsed_time - result.relative_timestamp[0]) / (
+            result.relative_timestamp[1] - result.relative_timestamp[0])
         char_index = round(ratio * len(result.sentence))
         end_index = int(self.index(f"{row_id + 1}.end").split('.')[1])
         if char_index > end_index:
             char_index_str = str(max(end_index - 1, 0))
         else:
             char_index_str = str(max(char_index - 1, 0))
-        self.tag_add(self.cursor_tag, f'{row_id + 1}.{char_index_str}', f'{row_id + 1}.{char_index_str} +1c')
+        self.tag_add(self.cursor_tag, f'{
+                     row_id + 1}.{char_index_str}', f'{row_id + 1}.{char_index_str} +1c')
         self.see(f"{self.cursor_tag}.first")
-        

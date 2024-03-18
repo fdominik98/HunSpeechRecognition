@@ -3,14 +3,17 @@ import os
 import psutil
 from py3nvml.py3nvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo, nvmlShutdown, NVMLError
 
+
 def check_gpu():
     try:
         nvmlInit()
         device_count = nvmlDeviceGetCount()
         if device_count > 0:
-            handle = nvmlDeviceGetHandleByIndex(0)  # Assuming we're interested in the first GPU
+            # Assuming we're interested in the first GPU
+            handle = nvmlDeviceGetHandleByIndex(0)
             memory_info = nvmlDeviceGetMemoryInfo(handle)
-            gpu_memory_gb = memory_info.total / (1024 ** 3)  # Convert bytes to GiB
+            gpu_memory_gb = memory_info.total / \
+                (1024 ** 3)  # Convert bytes to GiB
             nvmlShutdown()
             return True, gpu_memory_gb
         else:
@@ -18,6 +21,7 @@ def check_gpu():
     except NVMLError as e:
         print(f"Failed to access GPU information: {e}")
         return False, 0
+
 
 def select_whisper_model_type():
     # Check system properties
@@ -38,7 +42,8 @@ def select_whisper_model_type():
     else:
         model = 'medium'
 
-    print(f"Based on your system's resources, the recommended Whisper model to use is: {model}")
+    print(f"Based on your system's resources, the recommended Whisper model to use is: {
+          model}")
     return (model, has_gpu)
 
 

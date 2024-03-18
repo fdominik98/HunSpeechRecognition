@@ -1,10 +1,11 @@
 from customtkinter import CTkTextbox
 
-def empty(text : str):
+
+def empty(text: str):
     return ''.join(text.split()) == ''
 
 
-def get_text(textbox : CTkTextbox):
+def get_text(textbox: CTkTextbox):
     return textbox.get('0.0', 'end').strip()
 
 
@@ -55,12 +56,15 @@ def to_timestamp_1dec(seconds):
     if hours > 0:
         return f"{hours}:{minutes:02d}:{remaining_seconds:04.1f}"
     return f"{minutes}:{remaining_seconds:04.1f}"
-    
+
+
 def timestamp_str(timestamp: tuple[float, float]) -> str:
     return f'{to_timestamp_sec(timestamp[0])} - {to_timestamp_sec(timestamp[1])}'
 
 # Boyer Moore Pattern Matching algorithm
-def search_in_text(text : str, pattern : str) -> list[int]:
+
+
+def search_in_text(text: str, pattern: str) -> list[int]:
     M = len(pattern)
     N = len(text)
     skip = 0

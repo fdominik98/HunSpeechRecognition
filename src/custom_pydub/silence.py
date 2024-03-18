@@ -4,46 +4,47 @@ from custom_pydub.custom_audio_segment import AudioSegment
 from pydub.silence import detect_nonsilent
 from models.settings import Settings
 
-def split_on_silence(settings : Settings, audio : AudioSegment) -> tuple[AudioSegment, Optional[int], Optional[int]]:
-        silence_dur = round(settings.silence_dur * 1000)
-        keep_silence = 350
 
-        def pairwise(iterable):
-            "s -> (s0,s1), (s1,s2), (s2, s3), ..."
-            a, b = itertools.tee(iterable)
-            next(b, None)
-            return zip(a, b)
+def split_on_silence(settings: Settings, audio: AudioSegment) -> tuple[AudioSegment, Optional[int], Optional[int]]:
+    silence_dur = round(settings.silence_dur * 1000)
+    keep_silence = 350
 
-        if settings.trim_dbfs_auto:
-             treshold = audio.dBFS -5
-        else:
-             treshold = settings.noise_treshold
+    def pairwise(iterable):
+        "s -> (s0,s1), (s1,s2), (s2, s3), ..."
+        a, b = itertools.tee(iterable)
+        next(b, None)
+        return zip(a, b)
 
-        output_ranges = [
-            [ start - keep_silence, end + keep_silence ]
-            for (start,end)
-                in detect_nonsilent(audio, silence_dur, treshold, 10)
-        ]
+    if settings.trim_dbfs_auto:
+        treshold = audio.dBFS - 5
+    else:
+        treshold = settings.noise_treshold
 
-        for range_i, range_ii in pairwise(output_ranges):
-            last_end = range_i[1]
-            next_start = range_ii[0]
-            if next_start < last_end:
-                range_i[1] = (last_end+next_start)//2
-                range_ii[0] = range_i[1]
+    output_ranges = [
+        [start - keep_silence, end + keep_silence]
+        for (start, end)
+        in detect_nonsilent(audio, silence_dur, treshold, 10)
+    ]
 
-        processed_audio = AudioSegment.empty()
+    for range_i, range_ii in pairwise(output_ranges):
+        last_end = range_i[1]
+        next_start = range_ii[0]
+        if next_start < last_end:
+            range_i[1] = (last_end+next_start)//2
+            range_ii[0] = range_i[1]
 
-        first_start = None
-        last_end = None
+    processed_audio = AudioSegment.empty()
 
-        for start, end in output_ranges:
-            if first_start is None:
-                first_start = start  # Save the first start timestamp
-            last_end = end  # Update the last end timestamp with every iteration
-            
-            # Append chunks together
-            chunk = audio[max(start, 0):min(end, len(audio))]
-            processed_audio += chunk
+    first_start = None
+    last_end = None
 
-        return (processed_audio, first_start, last_end)
+    for start, end in output_ranges:
+        if first_start is None:
+            first_start = start  # Save the first start timestamp
+        last_end = end  # Update the last end timestamp with every iteration
+
+        # Append chunks together
+        chunk = audio[max(start, 0):min(end, len(audio))]
+        processed_audio += chunk
+
+    return (processed_audio, first_start, last_end)

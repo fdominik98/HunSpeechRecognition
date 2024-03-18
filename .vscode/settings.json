@@ -5,4 +5,8 @@
     "python.linting.enabled": true,
     // Format on save using the default formatter specified in your settings.
     "editor.formatOnSave": true,
+    "cSpell.words": [
+        "customtkinter",
+        "TRANSCRIPTING"
+    ],
 }

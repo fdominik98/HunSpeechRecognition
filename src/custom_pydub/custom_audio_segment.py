@@ -2,8 +2,9 @@ import subprocess
 from pydub.audio_segment import AudioSegment as AS, AUDIO_FILE_EXT_ALIASES, fix_wav_headers
 from pydub.utils import _fd_or_path_or_tempfile, fsdecode, mediainfo_json
 from pydub.logging_utils import log_conversion
-from pydub.exceptions import  CouldntDecodeError
+from pydub.exceptions import CouldntDecodeError
 from custom_pydub.utils import run_ffmpeg_command
+
 
 class AudioSegment(AS):
     @classmethod
@@ -129,14 +130,14 @@ class AudioSegment(AS):
         log_conversion(conversion_command)
 
         p, p_out, p_err = run_ffmpeg_command(command=conversion_command, input=stdin_data, stdin=stdin_parameter,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if p.returncode != 0 or len(p_out) == 0:
             if close_file:
                 file.close()
             raise CouldntDecodeError(
                 "Decoding failed. ffmpeg returned error code: {0}\n\nOutput from ffmpeg/avlib:\n\n{1}".format(
-                    p.returncode, p_err.decode(errors='ignore') ))
+                    p.returncode, p_err.decode(errors='ignore')))
 
         p_out = bytearray(p_out)
         fix_wav_headers(p_out)
@@ -154,4 +155,3 @@ class AudioSegment(AS):
             return obj[:duration * 1000]
         else:
             return obj[0:duration * 1000]
-        

@@ -2,6 +2,7 @@ import os
 from enum import Enum, unique
 from utils.general_utils import timestamp_str
 
+
 @unique
 class AudioSource(Enum):
     ORIGINAL = 'Eredeti hangfájl'
@@ -9,9 +10,10 @@ class AudioSource(Enum):
     SPLITLIST = 'Vágatlan szegmensek'
     TRIMLIST = 'Vágott szegmensek'
 
+
 class AudioFile():
-    def __init__(self, segment_number : int, file_path : str, absolute_timestamp : tuple[float, float],                
-                 is_place_holder : bool = False) -> None:
+    def __init__(self, segment_number: int, file_path: str, absolute_timestamp: tuple[float, float],
+                 is_place_holder: bool = False) -> None:
         self.chunk_id = segment_number
         self.file_path = file_path
         self.absolute_timestamp = absolute_timestamp
@@ -22,12 +24,11 @@ class AudioFile():
         if self.is_place_holder:
             return f'Üres {timestamp_str(self.absolute_timestamp)}'
         return f'{os.path.basename(self.file_path)} {timestamp_str(self.absolute_timestamp)}'
-    
+
     def exists(self) -> bool:
-         return os.path.exists(self.file_path)
+        return os.path.exists(self.file_path)
 
     def __eq__(self, other):
         if isinstance(other, AudioFile):
             return self.chunk_id == other.chunk_id and self.file_path == other.file_path
         return False
-

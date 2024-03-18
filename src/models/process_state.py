@@ -1,5 +1,5 @@
-from customtkinter import StringVar
 from enum import Enum, unique
+
 
 @unique
 class ProcessState(Enum):
@@ -13,7 +13,7 @@ class ProcessState(Enum):
         return obj
 
     @staticmethod
-    def from_label(label : str):
+    def from_label(label: str):
         return next((choice for choice in ProcessState if str(choice) == label), ProcessState.STOPPED)
 
     # Define your enum members with a unique integer and a common label.
@@ -23,11 +23,14 @@ class ProcessState(Enum):
     SPLITTING_TRIMMING = (3, 'Szegmentálás + Trimmelés')
     SPLITTING_TRANSCRIPTING = (4, 'Szegmentálás + Transzkriptálás')
     TRIMMING_TRANSCRIPTING = (5, 'Trimmelés + Transzkriptálás')
-    SPLITTING_TRIMMING_TRANSCRIPTING = (6, 'Szegmentálás + Trimmelés + Transzkriptálás')
+    SPLITTING_TRIMMING_TRANSCRIPTING = (
+        6, 'Szegmentálás + Trimmelés + Transzkriptálás')
     STOPPED = (7, 'Szünetel')
-    
+
     def __str__(self):
         # Return the label for the string representation.
         return self.label
-    
-non_trimming_options = [str(ProcessState.SPLITTING), str(ProcessState.TRANSCRIPTING), str(ProcessState.SPLITTING_TRANSCRIPTING)]
+
+
+non_trimming_options = [str(ProcessState.SPLITTING), str(
+    ProcessState.TRANSCRIPTING), str(ProcessState.SPLITTING_TRANSCRIPTING)]

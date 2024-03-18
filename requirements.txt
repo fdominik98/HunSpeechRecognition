@@ -18,3 +18,4 @@ pydub==0.25.1
 matplotlib==3.8.3
 py3nvml==0.2.7
 audioplayer==0.6
+mypy==1.9.0

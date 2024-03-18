@@ -1,5 +1,6 @@
 from threading import Lock
 
+
 class ProgressData():
     def __init__(self) -> None:
         self.__lock = Lock()
@@ -28,13 +29,11 @@ class ProgressData():
     def get_split_progress(self) -> int:
         with self.__lock:
             return self.__split_progress
-        
+
     def get_trim_progress(self) -> int:
         with self.__lock:
             return self.__trim_progress
-        
+
     def get_trans_progress(self) -> int:
         with self.__lock:
             return self.__trans_progress
-    
-        
