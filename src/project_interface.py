@@ -48,8 +48,11 @@ class ProjectInterface(CTk):
         try:
             self.environment_manager = EnvironmentManager()
         except Exception as e:
+            self.environment_manager = None
             open_message(self, 'hiba', e)
-            self.message_window.protocol("WM_DELETE_WINDOW", self.destroy)
+            self.message_window.protocol("WM_DELETE_WINDOW", self.__on_closing)
+
+        self.protocol("WM_DELETE_WINDOW", self.__on_closing)
 
         self.side_bar = CTkFrame(self, corner_radius=0)
         self.side_bar.grid(row=0, column=0, padx=(5, 0), sticky="nsew")
@@ -114,8 +117,9 @@ class ProjectInterface(CTk):
         self.grid_columnconfigure(0, weight=1, minsize=400)
         self.grid_rowconfigure(0, weight=1)
 
-        self.init_project_folder(
-            self.environment_manager.get_last_project_dir())
+        if self.environment_manager is not None:
+            self.init_project_folder(
+                self.environment_manager.get_last_project_dir())
 
         self.__set_loading_state('')
         self.__handle_process_on_startup()
@@ -295,6 +299,16 @@ class ProjectInterface(CTk):
             elif state is ModelInitState.ERROR:
                 pass
         self.after(300, self.__handle_process_on_startup)
+
+    def __on_closing(self):
+        if self.pipeline_process is not None and self.pipeline_process.is_alive:
+            self.pipeline_process.terminate()
+        if self.main_app_window is not None:
+            self.main_app_window.destroy()
+        if self.message_window is not None:
+            self.message_window.destroy()
+        self.destroy()
+        exit(0)
 
 
 def main():

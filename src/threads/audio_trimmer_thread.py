@@ -1,7 +1,6 @@
+from typing import Any
 from time import sleep
 from queue import Queue
-from custom_pydub.custom_audio_segment import AudioSegment
-from custom_pydub.silence import split_on_silence
 from threads.speech_base_thread import SpeechBaseThread
 from models.task import Task
 from models.audio_file import AudioFile
@@ -11,6 +10,7 @@ from models.progress_data import ProgressData
 
 
 class AudioTrimmerThread(SpeechBaseThread):
+
     def __init__(self, settings: Settings, error_callback,
                  input_queue: Queue, output_queue: Queue, split_audio_manager: SplitAudioFileManager,
                  trimmed_audio_manager: TrimmedAudioFileManager, progress_data: ProgressData):
@@ -55,7 +55,9 @@ class AudioTrimmerThread(SpeechBaseThread):
                                   .set_place_holder(audiofile.is_place_holder))
         return processed
 
-    def trim_audio(self, task: Task) -> tuple[AudioFile, AudioSegment]:
+    def trim_audio(self, task: Task) -> tuple[AudioFile, Any]:
+        from custom_pydub.silence import split_on_silence, AudioSegment
+
         audio = AudioSegment.from_wav(task.split_file_path)
         processed_audio, first_start, last_end = split_on_silence(
             self.settings, audio)

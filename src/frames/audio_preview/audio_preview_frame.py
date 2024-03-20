@@ -1,5 +1,4 @@
 from tkinter import messagebox
-from PIL import Image
 from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkImage, CTkSwitch, BooleanVar, NORMAL, DISABLED
 from utils.fonts import label_font
 from models.environment import get_images_path
@@ -26,6 +25,7 @@ class AudioPreviewFrame(CTkFrame):
         self.audio_stop_callback = audio_stop_callback
         self.trim_switch_flip_callbacks = []
 
+        from PIL import Image
         self.delete_all_icon = CTkImage(Image.open(
             f'{get_images_path()}/delete_all.png'), size=(17, 17))
         self.trash_icon = CTkImage(Image.open(

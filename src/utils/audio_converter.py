@@ -1,7 +1,4 @@
 import os
-import shutil
-import wave
-from custom_pydub.utils import run_ffmpeg_command
 
 audio_file_formats = [
     ("MP3 files", "*.mp3"),
@@ -36,6 +33,9 @@ class AudioConverter():
         self.converted_audio_duration = 0
 
     def convert_to_wav(self):
+        import shutil
+        from custom_pydub.utils import run_ffmpeg_command
+
         if self.__original_extension == '.wav':
             shutil.copy(self.__original_file_path, self.converted_audio_path)
         elif any(f'*{self.__original_extension}' == ext[1] for ext in audio_file_formats):
@@ -55,6 +55,8 @@ class AudioConverter():
             self.converted_audio_path)
 
     def __get_wav_duration(self, wav_file_path: str) -> float:
+        import wave
+
         with wave.open(wav_file_path, "r") as wav_file:
             frames = wav_file.getnframes()
             rate = wav_file.getframerate()

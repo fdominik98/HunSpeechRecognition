@@ -1,13 +1,9 @@
+from customtkinter import BOTH, TOP, CTkToplevel
 from models.settings import Settings
 from models.audio_file import AudioFile
 from threads.speech_base_thread import SpeechBaseThread
-from matplotlib.figure import Figure
-import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from customtkinter import BOTH, TOP, CTkToplevel
 from models.audio_file import AudioFile
 from managers.audio_file_manager import AudioFileManager
-from custom_pydub.custom_audio_segment import AudioSegment
 
 
 class PlotManagerThread(SpeechBaseThread):
@@ -18,12 +14,17 @@ class PlotManagerThread(SpeechBaseThread):
         self.audio_file = audio_file
 
     def do_run(self):
+        from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+        from matplotlib.figure import Figure
+        import numpy as np
+
         self.audio_file = self.audio_manager.get_by_path(
             self.audio_file.file_path)
         if self.audio_file is None or self.audio_file.length > 60:
             return
 
-        audio = AudioSegment.from_wav(self.audio_file.file_path)
+        from custom_pydub.custom_audio_segment import AudioSegment
+        audio: AudioSegment = AudioSegment.from_wav(self.audio_file.file_path)
 
         if audio.channels == 1:
             samples_float = np.array(

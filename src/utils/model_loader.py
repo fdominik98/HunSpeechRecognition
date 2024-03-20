@@ -1,10 +1,12 @@
-import requests
 import os
-import psutil
-from py3nvml.py3nvml import nvmlInit, nvmlDeviceGetCount, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo, nvmlShutdown, NVMLError
 
 
 def check_gpu():
+    from py3nvml.py3nvml import (nvmlInit,
+                                 nvmlDeviceGetCount,
+                                 nvmlDeviceGetHandleByIndex,
+                                 nvmlDeviceGetMemoryInfo,
+                                 nvmlShutdown, NVMLError)
     try:
         nvmlInit()
         device_count = nvmlDeviceGetCount()
@@ -24,6 +26,7 @@ def check_gpu():
 
 
 def select_whisper_model_type():
+    import psutil
     # Check system properties
     cpu_cores = psutil.cpu_count(logical=False)
     total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)  # Convert bytes to GiB
@@ -55,8 +58,9 @@ def check_whisper_model(model_type, model_path) -> bool:
 
 
 def check_internet():
+    from requests import get, ConnectionError
     try:
-        response = requests.get('http://www.google.com')
+        response = get('http://www.google.com')
         return True
-    except requests.ConnectionError:
+    except ConnectionError:
         return False

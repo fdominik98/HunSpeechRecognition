@@ -1,6 +1,5 @@
 from time import sleep
 from queue import Queue
-from custom_pydub.custom_audio_segment import AudioSegment
 from custom_pydub.utils import run_ffmpeg_command
 from threads.speech_base_thread import SpeechBaseThread
 from models.task import Task
@@ -36,6 +35,7 @@ class AudioSplitterThread(SpeechBaseThread):
                 sleep(1)
 
     def split_audio(self, task: Task):
+
         processed = False
         if self.split_audio_manager.exists(task.split_file_path):
             print(f'{task.split_file_path} already split. Skipping...')
@@ -49,6 +49,8 @@ class AudioSplitterThread(SpeechBaseThread):
                 task.split_file_path
             ]
             run_ffmpeg_command(command=command)
+
+            from custom_pydub.custom_audio_segment import AudioSegment
             audio: AudioSegment = AudioSegment.from_wav(task.split_file_path)
             audio = audio.apply_gain(-1.0 - audio.max_dBFS)
 

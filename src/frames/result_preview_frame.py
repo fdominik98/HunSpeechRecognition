@@ -1,4 +1,3 @@
-from PIL import Image
 from tkinter import messagebox
 from customtkinter import CTkFrame, CTkLabel, CTkButton, CTkImage, CTkEntry, StringVar, END
 from utils.fonts import label_font
@@ -18,6 +17,7 @@ class ResultPreviewFrame(CTkFrame):
         self.settings = settings
         self.result_manager: ResultManager = result_manager
 
+        from PIL import Image
         self.delete_all_icon = CTkImage(Image.open(
             f'{get_images_path()}/delete_all.png'), size=(17, 17))
         self.arrow_up_icon = CTkImage(Image.open(

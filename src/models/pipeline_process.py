@@ -1,8 +1,5 @@
 from time import sleep
-import shutil
 from multiprocessing import Queue as ProcessQueue, Pipe, Process
-from torch import cuda
-from faster_whisper import WhisperModel, download_model
 from models.task import Task
 from threads.pipeline_producer_thread import PipelineProducerThread
 from utils.model_loader import select_whisper_model_type, check_internet, check_whisper_model
@@ -39,6 +36,7 @@ class PipelineProcess(Process):
 
 
 def check_for_cuda():
+    from torch import cuda
     try:
         print('There are %d GPU(s) available.' % cuda.device_count())
         if cuda.is_available():
@@ -50,6 +48,8 @@ def check_for_cuda():
 
 
 def load_model(download_conn, model_type, model_path):
+    import shutil
+    from faster_whisper import download_model
     if check_whisper_model(model_type, model_path):
         return
 
@@ -66,6 +66,8 @@ def load_model(download_conn, model_type, model_path):
 
 
 def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue):
+    from faster_whisper import WhisperModel
+
     model_type, has_gpu = select_whisper_model_type()
     model_path = get_whisper_model_path()
 

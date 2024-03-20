@@ -12,8 +12,11 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[],
     noarchive=True,
+    cipher=None,
 )
-pyz = PYZ(a.pure)
+
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=None)
 
 exe = EXE(
     pyz,
@@ -24,15 +27,14 @@ exe = EXE(
     debug=True,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
     icon='../images/icon.ico',
 )
+
 coll = COLLECT(
     exe,
     a.binaries,
