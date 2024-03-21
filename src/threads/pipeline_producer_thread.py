@@ -23,10 +23,11 @@ class PipelineProducerThread(Thread):
             task: Task = self.input_queue.get()
             self.__busy_event.set()
             print(f'{self.name} received task {datetime.now()}')
-            segments, _ = self.__model.transcribe(
-                audio=task.result_file_path, language='hu')
-            self.__output_queue.put(
-                ([Segment(s.text, s.start, s.end) for s in segments], task))
+            segments, _ = self.__model.transcribe(audio=task.result_file_path,
+                                                  language='hu')
+            result = ([Segment(s.text, s.start, s.end)
+                      for s in segments], task)
+            self.__output_queue.put(result)
             self.__busy_event.clear()
             print(f'{self.name} finished task {datetime.now()}')
 

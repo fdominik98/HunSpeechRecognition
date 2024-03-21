@@ -18,4 +18,3 @@ testing
 log/*
 profiling/*
 whisper_models
-environment/*

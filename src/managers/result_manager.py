@@ -20,10 +20,18 @@ class ResultManager(LoadableManager):
             return []
 
         new_results: list[ResultRow] = []
+
+        current_start = 0.0
+        current_end = 0.0
+
         for segment in segments:
+
+            current_start = segment.start
+            current_end = min(segment.end, task.get_audio_length())
+
             absolute_timestamp = (
-                task.result_timestamp[0] + segment.start, task.result_timestamp[0] + segment.end)
-            result = ResultRow(round(absolute_timestamp[0] * 10), task.chunk_id, task.result_file_path, (segment.start, segment.end),
+                task.result_timestamp[0] + current_start, task.result_timestamp[0] + current_end)
+            result = ResultRow(round(absolute_timestamp[0] * 10), task.chunk_id, task.result_file_path, (current_start, current_end),
                                absolute_timestamp, segment.text.strip())
             self.__result_list.append(result)
             new_results.append(result)

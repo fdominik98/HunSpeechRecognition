@@ -18,6 +18,9 @@ class Task():
         self.result_timestamp: tuple[float, float] = (0, 0)
         self.is_place_holder = False
 
+    def get_audio_length(self) -> float:
+        return self.result_timestamp[1] - self.result_timestamp[0]
+
     def set_process_state(self, process_state: ProcessState):
         self.process_state = process_state
         return self
