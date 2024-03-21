@@ -2,7 +2,6 @@ from time import sleep
 from multiprocessing import Queue as ProcessQueue, Pipe, Process
 from models.task import Task
 from threads.pipeline_producer_thread import PipelineProducerThread
-from utils.model_loader import select_whisper_model_type, check_internet, check_whisper_model
 from models.environment import get_whisper_model_path
 from enum import Enum, unique
 
@@ -48,8 +47,10 @@ def check_for_cuda():
 
 
 def load_model(download_conn, model_type, model_path):
+    from utils.model_loader import check_internet, check_whisper_model
     import shutil
     from faster_whisper import download_model
+    
     if check_whisper_model(model_type, model_path):
         return
 
@@ -67,20 +68,23 @@ def load_model(download_conn, model_type, model_path):
 
 def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue):
     from faster_whisper import WhisperModel
+    from utils.model_loader import select_whisper_model_type_cpu
 
-    model_type, has_gpu = select_whisper_model_type()
+    #model_type, has_gpu = select_whisper_model_type_gpu()
+    model_type = select_whisper_model_type_cpu()
     model_path = get_whisper_model_path()
 
     load_model(download_conn, model_type, model_path)
     download_conn.send(ModelInitState.MODEL_FOUND)
 
-    if has_gpu:
-        check_for_cuda()
+    # if has_gpu:
+    #     check_for_cuda()
 
     num_producers = 3
 
-    model: WhisperModel = WhisperModel(model_type, device='auto',
+    model: WhisperModel = WhisperModel(model_type, device='cpu',
                                        num_workers=num_producers, download_root=model_path)
+                                       
     init_conn.send(ModelInitState.INIT_FINISHED)
 
     producers: list[PipelineProducerThread] = []

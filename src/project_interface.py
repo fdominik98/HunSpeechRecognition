@@ -6,7 +6,6 @@ from managers.settings_manager import SettingsManager
 from utils.general_utils import empty, get_text
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
-from windows.main_window import MainWindow
 from models.pipeline_process import PipelineProcess, ModelInitState
 from managers.environment_manager import EnvironmentManager
 from models.environment import get_images_path
@@ -37,7 +36,7 @@ class ProjectInterface(CTk):
 
         self.message_window = None
         self.project_loader_thread: Optional[ProjectLoaderThread] = None
-        self.main_app_window: Optional[MainWindow] = None
+        self.main_app_window = None
         self.loading_state = False
 
         # configure window
@@ -241,6 +240,9 @@ class ProjectInterface(CTk):
         if self.project_loader_thread.is_alive():
             self.after(300, self.__open_main_application)
             return
+
+            
+        from windows.main_window import MainWindow
         self.main_app_window = MainWindow(
             self.master, self.project_loader_thread.settings, self.pipeline_process)
         self.__unset_loading_state()

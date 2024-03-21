@@ -1,7 +1,6 @@
 from threading import Lock
 import json
 import os
-from typing import Optional
 from models.settings import Settings
 from models.task import Task
 from models.process_state import ProcessState
@@ -48,8 +47,7 @@ class AssetTreeManager():
                 for i in range(10):
                     if file_counter[0] >= n:
                         break
-                    file_paths[file_counter[0]] = f'{
-                        node_id}/audio{file_counter[0]:03d}.wav'
+                    file_paths[file_counter[0]] = f'{node_id}/audio{file_counter[0]:03d}.wav'
                     file_counter[0] += 1
                 return file_paths
 

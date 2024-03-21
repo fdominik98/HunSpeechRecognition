@@ -30,9 +30,8 @@ class TrimSettingsFrame(CTkFrame):
             row=1, column=0, padx=15, pady=0, sticky='nsew')
 
         self.noise_dbfs_value_label = CTkLabel(self,
-                                               text=f'{
-                                                   self.noise_dbfs_slider.get():.1f} dBFS',
-                                               height=10, font=label_font())
+                                               text=f'{self.noise_dbfs_slider.get():.1f} dBFS',
+                                                        height=10, font=label_font())
         self.noise_dbfs_value_label.grid(
             row=2, column=0, padx=15, pady=0, sticky='nsew')
 
@@ -48,8 +47,7 @@ class TrimSettingsFrame(CTkFrame):
             row=4, column=0, padx=15, pady=0, sticky='nsew')
 
         self.noise_dur_value_label = CTkLabel(self,
-                                              text=f'{
-                                                  self.noise_dur_slider.get():.2f} másodperc',
+                                              text=f'{self.noise_dur_slider.get():.2f} másodperc',
                                               height=10,
                                               font=label_font())
         self.noise_dur_value_label.grid(

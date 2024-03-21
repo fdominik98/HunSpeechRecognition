@@ -40,8 +40,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self.unselect_all()
         self.selected_object_ids.append(self.row_object_map[current_row_id])
         self._load_file(self.selected_object_ids[0])
-        self.tag_add(self.selected_tag, f'{
-                     current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_add(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selection_changed_callback()
 
     def on_ctrl_click(self, event):
@@ -53,8 +52,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
             self.unselect(current_row_id)
             return
         self.selected_object_ids.append(self.row_object_map[current_row_id])
-        self.tag_add(self.selected_tag, f'{
-                     current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_add(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selection_changed_callback()
 
     def _find(self, object_id: int) -> Optional[int]:
@@ -71,10 +69,8 @@ class InteractiveTextbox(CTkTextbox, ABC):
     def unselect(self, current_row_id):
         if current_row_id >= self.row_count():
             return
-        self.tag_remove(self.selected_tag, f'{
-                        current_row_id + 1}.0', f'{current_row_id + 1}.end')
-        self.tag_remove(self.cursor_tag, f'{
-                        current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_remove(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
+        self.tag_remove(self.cursor_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selected_object_ids.remove(self.row_object_map[current_row_id])
         self.selection_changed_callback()
 
@@ -184,6 +180,5 @@ class ResultInteractiveTextbox(InteractiveTextbox):
             char_index_str = str(max(end_index - 1, 0))
         else:
             char_index_str = str(max(char_index - 1, 0))
-        self.tag_add(self.cursor_tag, f'{
-                     row_id + 1}.{char_index_str}', f'{row_id + 1}.{char_index_str} +1c')
+        self.tag_add(self.cursor_tag, f'{row_id + 1}.{char_index_str}', f'{row_id + 1}.{char_index_str} +1c')
         self.see(f"{self.cursor_tag}.first")

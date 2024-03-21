@@ -25,7 +25,7 @@ def check_gpu():
         return False, 0
 
 
-def select_whisper_model_type():
+def select_whisper_model_type_gpu():
     import psutil
     # Check system properties
     cpu_cores = psutil.cpu_count(logical=False)
@@ -45,9 +45,30 @@ def select_whisper_model_type():
     else:
         model = 'medium'
 
-    print(f"Based on your system's resources, the recommended Whisper model to use is: {
-          model}")
+    print(f"Based on your system's resources, the recommended Whisper model to use is: {model}")
     return (model, has_gpu)
+
+def select_whisper_model_type_cpu():
+    import psutil
+    # Check system properties
+    cpu_cores = psutil.cpu_count(logical=False)
+    total_ram_gb = psutil.virtual_memory().total / (1024 ** 3)  # Convert bytes to GiB
+
+    print(f'CPU cores: {cpu_cores}')
+    print(f'Total RAM (GB): {total_ram_gb}')
+
+    # Define thresholds for model selection
+    ram_threshold_for_large = 16  # in GiB
+    cpu_core_threshold_for_large = 8  # in GiB
+
+    if cpu_cores >= cpu_core_threshold_for_large and total_ram_gb >= ram_threshold_for_large:
+        model = 'large'
+    else:
+        model = 'medium'
+
+    print(f"Based on your system's resources, the recommended Whisper model to use is: {model}")
+    return model
+
 
 
 def check_whisper_model(model_type, model_path) -> bool:

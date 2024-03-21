@@ -28,8 +28,7 @@ class AudioConverter():
         self.__original_extension = ext.lower()
         self.__original_file_path = file_path
         self.converted_audio_name = f'{file_name}.wav'
-        self.converted_audio_path = f'{
-            project_folder_path}/{self.converted_audio_name}'
+        self.converted_audio_path = f'{project_folder_path}/{self.converted_audio_name}'
         self.converted_audio_duration = 0
 
     def convert_to_wav(self):
