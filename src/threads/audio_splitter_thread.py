@@ -43,18 +43,12 @@ class AudioSplitterThread(SpeechBaseThread):
             command = [
                 'ffmpeg',
                 '-i', self.settings.project_audio_path,
-                '-ss', str(task.split_timestamp[0]),
-                '-t', str(task.split_timestamp[1] - task.split_timestamp[0]),
+                '-ss', str(task.split_timestamp[0] / 1000.0),
+                '-t', str((task.split_timestamp[1] - task.split_timestamp[0]) / 1000.0),
                 '-acodec', 'copy',
                 task.split_file_path
             ]
             run_ffmpeg_command(command=command)
-
-            from custom_pydub.custom_audio_segment import AudioSegment
-            audio: AudioSegment = AudioSegment.from_wav(task.split_file_path)
-            audio = audio.apply_gain(-1.0 - audio.max_dBFS)
-
-            audio.export(task.split_file_path, format="wav")
 
             split_audio_file = AudioFile(segment_number=task.chunk_id,
                                          file_path=task.split_file_path,

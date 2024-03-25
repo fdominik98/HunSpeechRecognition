@@ -20,7 +20,7 @@ class PlotManagerThread(SpeechBaseThread):
 
         self.audio_file = self.audio_manager.get_by_path(
             self.audio_file.file_path)
-        if self.audio_file is None or self.audio_file.length > 60:
+        if self.audio_file is None or self.audio_file.length > 60 * 1000:
             return
 
         from custom_pydub.custom_audio_segment import AudioSegment

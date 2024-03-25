@@ -132,6 +132,7 @@ class ThreadManager():
             else:
                 return    
 
+            self.init_manager_thread.join()
             for task in self.init_manager_thread.asset_tree_manager.get():
                 _task = deepcopy(task).set_process_state(process_state)
                 if trim_enabled:

@@ -121,6 +121,7 @@ class AudioPreviewFrame(CTkFrame):
             self.trim_textbox.grid_remove()
             self.trim_label.grid_remove()
             self.trim_delete_all_button.grid_remove()
+            self.trim_delete_selected_button.grid_remove()
         for cb in self.trim_switch_flip_callbacks:
             cb(switched)
 
@@ -141,6 +142,8 @@ class AudioPreviewFrame(CTkFrame):
             objects_to_delete = self.split_textbox.selected_object_ids.copy()
             for selected in objects_to_delete:
                 audio_file = self.split_audio_manager.get_by_index(selected)
+                if audio_file is None:
+                    return
                 self.audio_stop_callback()
                 if self.split_audio_manager.delete_audio_file(audio_file) is not None:
                     self.split_textbox.delete(audio_file.chunk_id)
@@ -162,6 +165,8 @@ class AudioPreviewFrame(CTkFrame):
             objects_to_delete = self.trim_textbox.selected_object_ids.copy()
             for selected in objects_to_delete:
                 audio_file = self.trimmed_audio_manager.get_by_index(selected)
+                if audio_file is None:
+                    return
                 self.audio_stop_callback()
                 if self.trimmed_audio_manager.delete_audio_file(audio_file) is not None:
                     self.trim_textbox.delete(audio_file.chunk_id)

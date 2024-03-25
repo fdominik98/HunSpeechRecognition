@@ -1,3 +1,4 @@
+from managers.asset_tree_manager import AssetTreeManager
 from threads.speech_base_thread import SpeechBaseThread
 from utils.audio_converter import AudioConverter
 from managers.settings_manager import SettingsManager
@@ -29,7 +30,7 @@ class ProjectCreatorThread(ProjectLoaderThread):
     def do_run(self):
         audio_converter = AudioConverter(self.project_dir, self.file_path)
         audio_converter.convert_to_wav()
-
+        
         audio_manager = MainAudioManager(audio_converter.converted_audio_path)
         audio_manager.save_audio_file(AudioFile(0, audio_converter.converted_audio_path, (0, audio_converter.converted_audio_duration)))
 
@@ -40,7 +41,10 @@ class ProjectCreatorThread(ProjectLoaderThread):
         self.settings.project_audio_path = audio_converter.converted_audio_path
         self.settings.project_audio_duration = audio_converter.converted_audio_duration
         self.settings.project_audio_name = audio_converter.converted_audio_name
-        self.settings.project_name = self.project_name
+        self.settings.project_name = self.project_name        
+        asset_tree_manager = AssetTreeManager(settings=self.settings)
+        asset_tree_manager.load()
+        self.settings.chunk_count = asset_tree_manager.chunk_count()
 
         self.settings_manager.save_settings()
 

@@ -106,8 +106,9 @@ class ProcessControlFrame(CTkFrame):
     def update_progress(self):
         if not self.winfo_exists():
             return
-        self.progress_time_label.configure(text=to_timestamp_sec(
-            (datetime.now() - self.start_time).seconds))
+        elapsed_time = (datetime.now() - self.start_time).seconds
+        elapsed_time_ms = int(round((elapsed_time) * 1000))
+        self.progress_time_label.configure(text=to_timestamp_sec(elapsed_time_ms))
 
         if self.process_state is ProcessState.SPLITTING:
             new_value = self.progress_data.get_split_progress()
@@ -121,7 +122,7 @@ class ProcessControlFrame(CTkFrame):
         else:
             new_value = 0
 
-        new_value = float(new_value) / self.settings.chunk_count()
+        new_value = float(new_value) / self.settings.chunk_count
         self.progressbar.set(new_value)
         self.progress_label.configure(text=f'{round(new_value * 100)} %')
         if new_value >= 1.0:

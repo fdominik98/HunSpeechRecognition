@@ -71,8 +71,7 @@ def select_whisper_model_type_cpu():
     else:
         model = 'medium'
 
-    print(f"Based on your system's resources, the recommended Whisper model to use is: {
-          model}")
+    print(f"Based on your system's resources, the recommended Whisper model to use is: {model}")
     return model
 
 
@@ -80,7 +79,7 @@ def check_whisper_model(model_type, model_path) -> bool:
     if not os.path.exists(model_path):
         os.makedirs(model_path)
         return False
-    return any(model_type in item for item in os.listdir(model_path))
+    return any((model_type in file and os.path.isfile(f'{model_path}/{file}')) for file in os.listdir(model_path))
 
 
 def check_internet():

@@ -21,17 +21,18 @@ class ResultManager(LoadableManager):
 
         new_results: list[ResultRow] = []
 
-        current_start = 0.0
-        current_end = 0.0
-
         for segment in segments:
-
             current_start = segment.start
-            current_end = min(segment.end, task.get_audio_length())
+
+            if segment.end == None:
+                #print(f'{task.chunk_id} {segment.start}-None": {segment.text.strip()}')
+                current_end = task.get_audio_length()
+            else:
+                current_end = min(segment.end, task.get_audio_length())
 
             absolute_timestamp = (
                 task.result_timestamp[0] + current_start, task.result_timestamp[0] + current_end)
-            result = ResultRow(round(absolute_timestamp[0] * 10), task.chunk_id, task.result_file_path, (current_start, current_end),
+            result = ResultRow(absolute_timestamp[0], task.chunk_id, task.result_file_path, (current_start, current_end),
                                absolute_timestamp, segment.text.strip())
             self.__result_list.append(result)
             new_results.append(result)
@@ -81,7 +82,7 @@ class ResultManager(LoadableManager):
                 os.remove(self.__file_path)
             self.__result_list.clear()
 
-    def get_result_by_audio(self, audio_file: AudioFile, elapsed_time: float) -> Optional[ResultRow]:
+    def get_result_by_audio(self, audio_file: AudioFile, elapsed_time: int) -> Optional[ResultRow]:
         with self._lock:
             return next((item for item in self.__result_list if
                          item.chunk_id == audio_file.chunk_id and

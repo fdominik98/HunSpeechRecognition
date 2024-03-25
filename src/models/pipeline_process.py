@@ -34,25 +34,10 @@ class PipelineProcess(Process):
         return super().terminate()
 
 
-def check_for_cuda():
-    from torch import cuda
-    try:
-        print('There are %d GPU(s) available.' % cuda.device_count())
-        if cuda.is_available():
-            print('We will use the GPU:', cuda.get_device_name(0))
-        else:
-            print('No GPU available, using the CPU instead.')
-    except:
-        print('Cuda is probably not installed on the system.')
-
-
-def load_model(download_conn, model_type, model_path):
-    from utils.model_loader import check_internet, check_whisper_model
+def download_model(download_conn, model_type, model_path):
+    from utils.model_loader import check_internet
     import shutil
-    from faster_whisper import download_model
-
-    if check_whisper_model(model_type, model_path):
-        return
+    import whisper
 
     download_conn.send(ModelInitState.CHECKING_FOR_CONN)
     while not check_internet():
@@ -60,31 +45,30 @@ def load_model(download_conn, model_type, model_path):
         sleep(2)
     download_conn.send(ModelInitState.DOWNLOADING_MODEL)
     try:
-        path = download_model(model_type, cache_dir=model_path)
+        model = whisper.load_model(model_type, device='cpu', download_root=model_path)
     except Exception:
         shutil.rmtree(model_path)
         download_conn.send(ModelInitState.ERROR)
+        
+    return model
 
 
 def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue):
-    from faster_whisper import WhisperModel
-    from utils.model_loader import select_whisper_model_type_cpu
-
-    # model_type, has_gpu = select_whisper_model_type_gpu()
-    model_type = select_whisper_model_type_cpu()
+    from utils.model_loader import select_whisper_model_type_cpu, check_whisper_model
+    
+    num_producers = 1
     model_path = get_whisper_model_path()
+    model_type = select_whisper_model_type_cpu()
+    model_type = "large"
 
-    load_model(download_conn, model_type, model_path)
-    download_conn.send(ModelInitState.MODEL_FOUND)
-
-    # if has_gpu:
-    #     check_for_cuda()
-
-    num_producers = 5
-
-    model: WhisperModel = WhisperModel(model_type, device='cpu',
-                                       num_workers=num_producers, download_root=model_path)
-
+    if check_whisper_model(model_type, model_path):
+        download_conn.send(ModelInitState.MODEL_FOUND)
+        import whisper
+        model = whisper.load_model(model_type, device='cpu', download_root=model_path)  
+    else:
+        model = download_model(download_conn, model_type, model_path)
+        download_conn.send(ModelInitState.MODEL_FOUND)
+    
     init_conn.send(ModelInitState.INIT_FINISHED)
 
     producers: list[PipelineProducerThread] = []

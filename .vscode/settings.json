@@ -7,6 +7,8 @@
     "editor.formatOnSave": true,
     "cSpell.words": [
         "customtkinter",
+        "fájlok",
+        "hiba",
         "psutil",
         "TRANSCRIPTING"
     ],

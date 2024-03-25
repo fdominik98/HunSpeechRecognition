@@ -1,5 +1,5 @@
 class Segment():
-    def __init__(self, text: str, start: float, end: float) -> None:
+    def __init__(self, text: str, start: int, end: int) -> None:
         self.text: str = text
-        self.start: float = start
-        self.end: float = end
+        self.start: int = start
+        self.end: int = end

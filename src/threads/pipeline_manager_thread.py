@@ -61,7 +61,7 @@ class PipelineManagerThread(SpeechBaseThread):
     def reseted(self):
         return self.__reset_event.is_set()
 
-    def save_results(self, ready_task: tuple[list[Segment], Task]):
+    def save_results(self, ready_task: tuple[list[Segment], Task, str]):
         result_list = self.result_manager.save_results(
             ready_task[0], ready_task[1])
         for result in result_list:

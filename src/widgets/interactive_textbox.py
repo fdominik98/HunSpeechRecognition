@@ -31,6 +31,9 @@ class InteractiveTextbox(CTkTextbox, ABC):
 
     def on_text_click(self, event):
         current_row_id = self.__get_clicked_row() - 1
+        self.select_row(current_row_id)
+        
+    def select_row(self, current_row_id):
         if current_row_id >= self.row_count():
             self.unselect_all()
             return
@@ -42,6 +45,7 @@ class InteractiveTextbox(CTkTextbox, ABC):
         self._load_file(self.selected_object_ids[0])
         self.tag_add(self.selected_tag, f'{current_row_id + 1}.0', f'{current_row_id + 1}.end')
         self.selection_changed_callback()
+        
 
     def on_ctrl_click(self, event):
         current_row_id = self.__get_clicked_row() - 1
@@ -161,12 +165,11 @@ class ResultInteractiveTextbox(InteractiveTextbox):
         if audio_file is not None:
             self.audio_load_callback(audio_file_manager, audio_file, result)
 
-    def refresh_cursor_position(self, audio_file: Optional[AudioFile], elapsed_time: float):
+    def refresh_cursor_position(self, audio_file: Optional[AudioFile], elapsed_time: int):
         self.tag_remove(self.cursor_tag, '1.0', END)
         if audio_file is None:
             return
-        result = self.result_manager.get_result_by_audio(
-            audio_file, elapsed_time)
+        result = self.result_manager.get_result_by_audio(audio_file, elapsed_time)
         if result is None:
             return
         row_id = self._find(result.id)

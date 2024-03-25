@@ -25,7 +25,7 @@ class TrimSettingsFrame(CTkFrame):
         # Create a Scale widget
         self.noise_dbfs_slider = CTkSlider(
             self, from_=-50, to=-10, command=self.__on_noise_db_slider_change)
-        self.noise_dbfs_slider.set(self.settings.noise_treshold)
+        self.noise_dbfs_slider.set(self.settings.noise_threshold)
         self.noise_dbfs_slider.grid(
             row=1, column=0, padx=15, pady=0, sticky='nsew')
 
@@ -57,11 +57,11 @@ class TrimSettingsFrame(CTkFrame):
 
     def __on_noise_db_slider_change(self, value):
         self.noise_dbfs_value_label.configure(text=f'{value:.1f} dBFS')
-        self.settings.noise_treshold = value
+        self.settings.noise_threshold = value
 
     def __on_noise_dur_slider_change(self, value):
         self.noise_dur_value_label.configure(text=f'{value:.2f} másodperc')
-        self.settings.silence_dur = value
+        self.settings.silence_dur = int(round(value * 1000))
 
     def __on_dbfs_auto_change(self):
         value = bool(self.dbfs_auto_checkbox.get())

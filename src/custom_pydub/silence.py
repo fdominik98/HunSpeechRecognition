@@ -6,7 +6,6 @@ from models.settings import Settings
 
 
 def split_on_silence(settings: Settings, audio: AudioSegment) -> tuple[AudioSegment, Optional[int], Optional[int]]:
-    silence_dur = round(settings.silence_dur * 1000)
     keep_silence = 350
 
     def pairwise(iterable):
@@ -16,14 +15,14 @@ def split_on_silence(settings: Settings, audio: AudioSegment) -> tuple[AudioSegm
         return zip(a, b)
 
     if settings.trim_dbfs_auto:
-        treshold = audio.dBFS - 5
+        threshold = audio.dBFS - 5
     else:
-        treshold = settings.noise_treshold
+        threshold = settings.noise_threshold
 
     output_ranges = [
         [start - keep_silence, end + keep_silence]
         for (start, end)
-        in detect_nonsilent(audio, silence_dur, treshold, 10)
+        in detect_nonsilent(audio, settings.silence_dur, threshold, 50)
     ]
 
     for range_i, range_ii in pairwise(output_ranges):

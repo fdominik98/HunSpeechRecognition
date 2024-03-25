@@ -2,7 +2,6 @@ import os
 import time
 from typing import Optional
 from customtkinter import CTkFrame, CTkButton, CTkSlider, CTkTextbox, CTkLabel, HORIZONTAL, VERTICAL, CTkImage, END
-from PIL import Image
 import tktooltip
 from models.result_row import ResultRow
 from utils.general_utils import to_timestamp_sec, timestamp_str
@@ -23,6 +22,7 @@ class AudioPlayerFrame(CTkFrame):
 
         self.audio_player : Optional[AudioPlayer] = None
 
+        from PIL import Image
         image_base_path = get_images_path()
         self.play_icon = CTkImage(Image.open(f'{image_base_path}/play.png'), size=(25, 25))
         self.pause_icon = CTkImage(Image.open(f'{image_base_path}/pause.png'), size=(25, 25))
@@ -149,7 +149,7 @@ class AudioPlayerFrame(CTkFrame):
         if self.navigation_slider.get() == 100:
             self.audio_player.pause()
             return
-        self.audio_player.play(self.navigation_slider.get() * self.audio_player.audio_length() / 100)
+        self.audio_player.play(int(round(self.navigation_slider.get() * self.audio_player.audio_length() / 100)))
         self.update_slider_position()
         self.play_button.configure(image=self.pause_icon, command=self.on_pause)
 
@@ -216,7 +216,7 @@ class AudioPlayerFrame(CTkFrame):
             return
 
         if self.audio_player.is_playing:
-            elapsed_time = time.time() - self.audio_player.start_time
+            elapsed_time = int(round(time.time() * 1000)) - self.audio_player.start_time
             self.refresh_cursor_position(elapsed_time)
             self.navigation_slider.set(elapsed_time / self.audio_player.audio_length() * 100)
             self.elapsed_time_label.configure(text=to_timestamp_sec(elapsed_time))
@@ -238,7 +238,7 @@ class AudioPlayerFrame(CTkFrame):
         else:
             elapsed_time = 0
 
-        self.navigation_slider.set(elapsed_time / audio_file.length * 100)
+        self.navigation_slider.set(float(elapsed_time) / audio_file.length * 100)
         self.navigate(elapsed_time)
         self.refresh_cursor_position(elapsed_time)
 
@@ -249,9 +249,11 @@ class AudioPlayerFrame(CTkFrame):
         self.audio_info_textbox.insert(END, f'- Fájl: {os.path.basename(audio_file.file_path)}\n')
         self.audio_info_textbox.insert(END, f'- Útvonal: {audio_file.file_path}\n')
         self.audio_info_textbox.insert(END, f'- Szegmens pozíció: {timestamp_str(audio_file.absolute_timestamp)}\n')
+        self.audio_info_textbox.insert(END, f'- Szegmens hossz: {to_timestamp_sec(audio_file.length)}\n')
 
         if result is not None:
             self.audio_info_textbox.insert(END, f'\n- Szöveg pozíció: {timestamp_str(result.absolute_timestamp)}\n')
+            self.audio_info_textbox.insert(END, f'- Szöveg hossz: {to_timestamp_sec(result.length)}\n')
 
         self.audio_info_textbox.configure(state='disabled')
         self.play_button.configure(image=self.play_icon, command=self.on_play)
@@ -263,4 +265,8 @@ class AudioPlayerFrame(CTkFrame):
     def refresh_cursor_position(self, elapsed_time):
         for cb in self.refresh_cursor_position_callbacks:
             cb(self.audio_player.audio_file, elapsed_time)
+            
+    def on_trim_switch_flipped(self, switched):
+        if not switched:
+            self.on_stop()
 

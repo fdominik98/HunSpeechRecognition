@@ -22,7 +22,6 @@ def open_message(parent: CTkToplevel, title: str, message: str):
     # create window if its None or destroyed
     parent.message_window = MessageWindow(message, master=parent)
     center_window(parent.message_window, 400, 200)
-    parent.message_window.iconbitmap(f'{get_images_path()}/icon.ico')
     parent.message_window.title(title)
     parent.message_window.lift()
     parent.message_window.attributes('-topmost', True)

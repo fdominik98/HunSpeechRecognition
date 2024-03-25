@@ -12,8 +12,8 @@ from managers.thread_manager import ThreadManager
 
 
 class MainWindow(CTkToplevel):
-    def __init__(self, master, settings: Settings, pipeline_prcess: PipelineProcess):
-        super().__init__(master=master)
+    def __init__(self, parent, settings: Settings, pipeline_prcess: PipelineProcess):
+        super().__init__(parent)
         self.withdraw()
         self.bind('<Button-1>', self.on_widget_click)
         self.message_window: CTkToplevel = None
@@ -61,11 +61,10 @@ class MainWindow(CTkToplevel):
                                                      audio_load_callback=self.audio_player_frame.load,
                                                      audio_play_callback=self.audio_player_frame.on_play,
                                                      audio_stop_callback=self.audio_player_frame.on_stop)
-        self.audio_player_frame.stop_playing_callbacks.append(
-            self.audio_preview_frame.split_textbox.unselect_all)
-        self.audio_player_frame.stop_playing_callbacks.append(
-            self.audio_preview_frame.trim_textbox.unselect_all)
-
+        self.audio_player_frame.stop_playing_callbacks += [
+            self.audio_preview_frame.split_textbox.unselect_all,
+            self.audio_preview_frame.trim_textbox.unselect_all]
+            
         self.process_control_frame = ProcessControlFrame(self.right_sidebar_frame, 2, 0,
                                                          settings=settings,
                                                          result_manager=result_manager,
@@ -75,8 +74,9 @@ class MainWindow(CTkToplevel):
                                                          split_audio_manager=split_audio_manager,
                                                          trimmed_audio_manager=trimmed_audio_manager,
                                                          progress_data=self.thread_manager.progress_data)
-        self.audio_preview_frame.trim_switch_flip_callbacks.append(
-            self.process_control_frame.on_trim_switch_flipped)
+        self.audio_preview_frame.trim_switch_flip_callbacks += [
+            self.process_control_frame.on_trim_switch_flipped,
+            self.audio_player_frame.on_trim_switch_flipped]
 
         self.right_sidebar_frame.grid_columnconfigure(0, weight=1)
 

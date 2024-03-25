@@ -58,7 +58,7 @@ class AudioTrimmerThread(SpeechBaseThread):
     def trim_audio(self, task: Task) -> tuple[AudioFile, Any]:
         from custom_pydub.silence import split_on_silence, AudioSegment
 
-        audio = AudioSegment.from_wav(task.split_file_path)
+        audio : AudioSegment = AudioSegment.from_wav(task.split_file_path)
         processed_audio, first_start, last_end = split_on_silence(
             self.settings, audio)
 
@@ -66,10 +66,10 @@ class AudioTrimmerThread(SpeechBaseThread):
         is_place_holder = False
         if first_start is not None and last_end is not None and len(processed_audio) > 300:
             if len(audio) != len(processed_audio):
-                new_timestamp = (task.split_timestamp[0] + float(first_start) / 1000,
-                                 task.split_timestamp[0] + float(last_end) / 1000)
+                new_timestamp = (task.split_timestamp[0] + first_start,
+                                 task.split_timestamp[0] + last_end)
         else:
-            processed_audio = AudioSegment.silent(duration=50)
+            processed_audio = AudioSegment.silent(duration=50, frame_rate=audio.frame_rate)
             is_place_holder = True
 
         audio_file = AudioFile(segment_number=task.chunk_id,

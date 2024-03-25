@@ -7,11 +7,10 @@ customtkinter==5.2.2
 pyyaml==6.0.1
 pydantic_yaml[ruamel, pyyaml]==0.8.1
 pillow==10.2.0
-faster-whisper==1.0.1
 tkinter-tooltip==3.0.0
-torch @ https://download.pytorch.org/whl/cu118/torch-2.2.1%2Bcu118-cp312-cp312-win_amd64.whl
-torchvision @ https://download.pytorch.org/whl/cu118/torchvision-0.17.1%2Bcu118-cp312-cp312-win_amd64.whl
-torchaudio @ https://download.pytorch.org/whl/cu118/torchaudio-2.2.1%2Bcu118-cp312-cp312-win_amd64.whl
+torch==2.2.1
+torchvision==0.17.1
+torchaudio==2.2.1
 pyinstaller==6.4.0
 pylint==3.0.3
 pydub==0.25.1
@@ -19,3 +18,4 @@ matplotlib==3.8.3
 py3nvml==0.2.7
 audioplayer==0.6
 mypy==1.9.0
+openai-whisper==20231117

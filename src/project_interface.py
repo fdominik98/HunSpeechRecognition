@@ -30,19 +30,13 @@ class ProjectInterface(CTk):
 
     def __init__(self):
         super().__init__()
-
-        self.pipeline_process = PipelineProcess()
-        self.pipeline_process.start()
+        # configure window
+        center_window(self, 500, 500) 
 
         self.message_window = None
         self.project_loader_thread: Optional[ProjectLoaderThread] = None
         self.main_app_window = None
         self.loading_state = False
-
-        # configure window
-        center_window(self, 500, 500)
-        self.title(TITLE)
-        self.iconbitmap(default=ICON)
 
         try:
             self.environment_manager = EnvironmentManager()
@@ -50,6 +44,9 @@ class ProjectInterface(CTk):
             self.environment_manager = None
             open_message(self, 'hiba', e)
             self.message_window.protocol("WM_DELETE_WINDOW", self.__on_closing)
+
+        self.pipeline_process = PipelineProcess()
+        self.pipeline_process.start()
 
         self.protocol("WM_DELETE_WINDOW", self.__on_closing)
 
@@ -68,7 +65,7 @@ class ProjectInterface(CTk):
             self.project_folder_textbox, self.__browse_project_folder)
 
         self.project_name_label = CTkLabel(
-            self.side_bar, text="Project neve:", height=10, font=label_font())
+            self.side_bar, text="Projekt neve:", height=10, font=label_font())
         self.project_name_label.grid(
             row=2, column=0, padx=20, pady=(40, 0), sticky='nsew')
         self.project_name_textbox = CTkTextbox(
@@ -92,7 +89,7 @@ class ProjectInterface(CTk):
             self.input_file_textbox, self.__browse_input_file)
 
         self.load_project_button = CTkButton(
-            self.side_bar, command=self.__load_project, text="Project betöltése", font=button_font())
+            self.side_bar, command=self.__load_project, text="Projekt betöltése", font=button_font())
         self.load_project_button.grid(
             row=6, column=0, padx=20, pady=(40, 0), sticky='nsew')
 
@@ -130,7 +127,11 @@ class ProjectInterface(CTk):
     def __browse_input_file(self, e):
         if self.loading_state:
             return
-        file_path = filedialog.askopenfilename(filetypes=audio_file_formats)
+        file_path = filedialog.askopenfilename(filetypes= [("Minden fájl", "*.*")] + audio_file_formats)
+        file_name, file_ext = os.path.splitext(os.path.basename(file_path))
+        if not any(f'*{file_ext}' == ext[1] for ext in audio_file_formats) and file_path != '':
+            open_message(parent=self, title='hiba', message=f'A(z) {file_ext} kiterjesztés nem támogatott!')
+            return
         self.__set_input_file(file_path)
 
     def __browse_project_folder(self, e):
@@ -241,16 +242,13 @@ class ProjectInterface(CTk):
             self.after(300, self.__open_main_application)
             return
 
-            
         from windows.main_window import MainWindow
-        self.main_app_window = MainWindow(
-            self.master, self.project_loader_thread.settings, self.pipeline_process)
+        self.main_app_window = MainWindow(self, self.project_loader_thread.settings, self.pipeline_process)
         self.__unset_loading_state()
         self.withdraw()
         self.main_app_window.protocol(
             "WM_DELETE_WINDOW", lambda settings_manager=self.project_loader_thread.settings_manager: self.on_main_window_closing(settings_manager))
-        self.main_app_window.iconbitmap(ICON)
-        self.main_app_window.title(TITLE)
+        self.main_app_window.title(f'{TITLE} - Projekt: {self.project_loader_thread.settings.project_name}')
         center_window(self.main_app_window, 1100, 720)
         self.main_app_window.state('zoomed')
 
@@ -286,12 +284,12 @@ class ProjectInterface(CTk):
         if self.pipeline_process.download_parent_conn.poll():
             state: ModelInitState = self.pipeline_process.download_parent_conn.recv()
             if state is ModelInitState.CHECKING_FOR_MODEL:
-                self.__set_loading_state('Model keresése')
+                self.__set_loading_state('Függőségek keresése')
             elif state is ModelInitState.CHECKING_FOR_CONN:
                 self.__set_loading_state('Hálózati kapcsolat ellenőrzés')
             elif state is ModelInitState.DOWNLOADING_MODEL:
                 self.__set_loading_state(
-                    'Model letöltése. Ne szakítsd meg az internet kapcsolatot!')
+                    'Függőségek letöltése. Ne szakítsd meg az internet kapcsolatot!')
             elif state is ModelInitState.MODEL_FOUND:
                 self.__unset_loading_state()
                 return
@@ -315,6 +313,9 @@ class ProjectInterface(CTk):
 
 def main():
     app = ProjectInterface()
+    app.title(TITLE)
+    app.iconname(ICON)
+    app.iconbitmap(ICON)
     app.mainloop()
 
 

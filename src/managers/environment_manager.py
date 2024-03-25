@@ -44,6 +44,8 @@ class EnvironmentManager():
                 '[INSTALL_DIR]', root_path))
             os.environ['CUDA_PATH'] = self.__environment.cuda_path.replace(
                 '[INSTALL_DIR]', root_path)
+            os.environ['FFMPEG_PATH'] = self.__environment.ffmpeg_path.replace(
+                '[INSTALL_DIR]', root_path)
 
     def save_environment(self) -> None:
         with self.__lock:

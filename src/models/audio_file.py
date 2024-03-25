@@ -12,18 +12,18 @@ class AudioSource(Enum):
 
 
 class AudioFile():
-    def __init__(self, segment_number: int, file_path: str, absolute_timestamp: tuple[float, float],
+    def __init__(self, segment_number: int, file_path: str, absolute_timestamp: tuple[int, int],
                  is_place_holder: bool = False) -> None:
-        self.chunk_id = segment_number
-        self.file_path = file_path
-        self.absolute_timestamp = absolute_timestamp
-        self.is_place_holder = is_place_holder
-        self.length = self.absolute_timestamp[1] - self.absolute_timestamp[0]
+        self.chunk_id : int= segment_number
+        self.file_path : str = file_path
+        self.absolute_timestamp : tuple[int, int] = absolute_timestamp
+        self.is_place_holder : bool = is_place_holder
+        self.length : int = self.absolute_timestamp[1] - self.absolute_timestamp[0]
 
     def __str__(self) -> str:
         if self.is_place_holder:
-            return f'Üres {timestamp_str(self.absolute_timestamp)}'
-        return f'{os.path.basename(self.file_path)} {timestamp_str(self.absolute_timestamp)}'
+            return f'{self.chunk_id + 1}. ({timestamp_str(self.absolute_timestamp)}) Üres'
+        return f'{self.chunk_id + 1}. ({timestamp_str(self.absolute_timestamp)}) {os.path.basename(self.file_path)}'
 
     def exists(self) -> bool:
         return os.path.exists(self.file_path)
