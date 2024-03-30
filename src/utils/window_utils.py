@@ -1,6 +1,6 @@
 from customtkinter import CTkToplevel
-from windows.message_window import MessageWindow
-from windows.plot_window import PlotWindow
+from widgets.windows.message_window import MessageWindow
+from widgets.windows.plot_window import PlotWindow
 from models.environment import get_images_path
 
 

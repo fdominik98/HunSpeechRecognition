@@ -1,20 +1,26 @@
 from queue import Queue
-from customtkinter import CTkFrame, CTkProgressBar
+from customtkinter import CTkFrame, CTkProgressBar, CTkLabel
 from models.pipeline_process import ModelInitState
-
+from models.settings import Settings
+from utils.fonts import label_font
 
 class InitPipelineFrame(CTkFrame):
-    def __init__(self, parent, row, column, init_pipeline_queue: Queue):
+    def __init__(self, parent, settings : Settings, row, column, init_pipeline_queue: Queue):
         super().__init__(parent, height=10)
         self.init_pipeline_queue: Queue = init_pipeline_queue
 
         self.grid(row=row, column=column, rowspan=1,
                   pady=(0, 10), sticky="nsew")
+        
+        self.project_label = CTkLabel(
+            self, text=f'{settings.project_name} projekt', height=10, font=label_font())
+        self.project_label.grid(
+            row=0, column=0, padx=10, pady=(5, 5), sticky='nsw')
 
         self.init_progressbar = CTkProgressBar(
             self, orientation="horizontal", height=5, corner_radius=0, determinate_speed=2.5)
         self.init_progressbar.grid(
-            row=0, column=0, padx=0, pady=0, sticky="wsne")
+            row=1, column=0, padx=0, pady=0, sticky="wsne")
 
         self.grid_columnconfigure(0, weight=1)
 

@@ -19,3 +19,4 @@ py3nvml==0.2.7
 audioplayer==0.6
 mypy==1.9.0
 openai-whisper==20231117
+tiktoken==0.6.0

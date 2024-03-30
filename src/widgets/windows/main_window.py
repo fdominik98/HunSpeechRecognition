@@ -1,4 +1,4 @@
-from customtkinter import CTkToplevel, CTkFrame
+from customtkinter import CTkFrame
 from models.settings import Settings
 from models.process_state import ProcessState
 from frames.audio_player_frame import AudioPlayerFrame
@@ -9,14 +9,15 @@ from frames.process_control_frame import ProcessControlFrame
 from utils.window_utils import open_message
 from models.pipeline_process import PipelineProcess
 from managers.thread_manager import ThreadManager
+from widgets.windows.toplevel_window import ToplevelWindow
 
 
-class MainWindow(CTkToplevel):
+class MainWindow(ToplevelWindow):
     def __init__(self, parent, settings: Settings, pipeline_prcess: PipelineProcess):
         super().__init__(parent)
         self.withdraw()
         self.bind('<Button-1>', self.on_widget_click)
-        self.message_window: CTkToplevel = None
+        self.message_window: ToplevelWindow = None
 
         self.thread_manager: ThreadManager = ThreadManager(settings=settings,
                                                            pipeline_process=pipeline_prcess,
@@ -51,7 +52,7 @@ class MainWindow(CTkToplevel):
             row=0, column=0, rowspan=2, padx=(0, 5), sticky="nsew")
 
         self.init_pipeline_frame = InitPipelineFrame(
-            self.left_sidebar_frame, 0, 0, self.thread_manager.init_pipeline_queue)
+            self.left_sidebar_frame, settings, 0, 0, self.thread_manager.init_pipeline_queue)
 
         self.audio_preview_frame = AudioPreviewFrame(self.left_sidebar_frame, row=1, column=0,
                                                      settings=settings,

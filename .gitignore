@@ -18,3 +18,4 @@ testing
 log/*
 profiling/*
 whisper_models
+**/*.bin

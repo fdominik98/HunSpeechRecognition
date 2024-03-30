@@ -31,9 +31,13 @@ Name: "{userappdata}\HunSpeechRecognition\whisper_models"
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 var
   EnvVarName: string;
+  ResultCode: Integer;
 begin
   if CurUninstallStep = usPostUninstall then
   begin
+    // Replace 'YourAppName.exe' with the actual executable name
+    Exec('cmd.exe', '/C taskkill /F /IM hunspeechrecognition.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+
     EnvVarName := 'HUNSPEECH_PATH';
     RegDeleteValue(HKEY_CURRENT_USER, 'Environment', EnvVarName);
     RegDeleteValue(HKEY_LOCAL_MACHINE, 'SYSTEM\CurrentControlSet\Control\Session Manager\Environment', EnvVarName);

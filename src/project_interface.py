@@ -12,8 +12,10 @@ from models.environment import get_images_path
 from custom_logging.setup_logging import setup_logging
 from utils.audio_converter import audio_file_formats
 from threads.project_loader_thread import ProjectLoaderThread, ProjectCreatorThread
+from custom_pydub.utils import patch_popen
 
-
+patch_popen()
+setup_logging()
 freeze_support()  # Preventing multiple windows in production
 
 set_appearance_mode("dark")  # Modes: "System" (standard), "Dark", "Light"
@@ -23,7 +25,6 @@ set_default_color_theme("blue")
 TITLE = "Transzkriptor Prototípus"
 ICON = f'{get_images_path()}/icon.ico'
 
-setup_logging()
 
 
 class ProjectInterface(CTk):
@@ -242,7 +243,7 @@ class ProjectInterface(CTk):
             self.after(300, self.__open_main_application)
             return
 
-        from windows.main_window import MainWindow
+        from widgets.windows.main_window import MainWindow
         self.main_app_window = MainWindow(self, self.project_loader_thread.settings, self.pipeline_process)
         self.__unset_loading_state()
         self.withdraw()
@@ -314,7 +315,6 @@ class ProjectInterface(CTk):
 def main():
     app = ProjectInterface()
     app.title(TITLE)
-    app.iconname(ICON)
     app.iconbitmap(ICON)
     app.mainloop()
 

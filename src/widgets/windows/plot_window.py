@@ -1,10 +1,10 @@
-from customtkinter import CTkToplevel
 from models.audio_file import AudioFile
 from threads.plot_manager_thread import PlotManagerThread
 from managers.audio_file_manager import AudioFileManager
+from widgets.windows.toplevel_window import ToplevelWindow
 
 
-class PlotWindow(CTkToplevel):
+class PlotWindow(ToplevelWindow):
     """Initializes a top-level window showing status messages.
     """
 

@@ -9,6 +9,7 @@
         "customtkinter",
         "fájlok",
         "hiba",
+        "projekt",
         "psutil",
         "TRANSCRIPTING"
     ],

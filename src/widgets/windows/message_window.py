@@ -1,8 +1,9 @@
-from customtkinter import CTkToplevel, CTkTextbox, CTkButton
+from customtkinter import CTkTextbox, CTkButton
 from utils.fonts import label_font, button_font
+from widgets.windows.toplevel_window import ToplevelWindow
 
 
-class MessageWindow(CTkToplevel):
+class MessageWindow(ToplevelWindow):
     """Initializes a top-level window showing status messages.
     """
 

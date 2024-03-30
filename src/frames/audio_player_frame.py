@@ -192,12 +192,14 @@ class AudioPlayerFrame(CTkFrame):
 
     def navigate(self, val):
         if not self.loaded():
-            return
+            return        
+        self.set_elapsed_time(self.audio_player.get_elapsed_time(val))
         
-        elapsed_time = self.audio_player.get_elapsed_time(val)
+    def set_elapsed_time(self, elapsed_time):
         self.audio_player.set_start_time(elapsed_time)
         self.elapsed_time_label.configure(text=to_timestamp_sec(elapsed_time))
         self.refresh_cursor_position(elapsed_time)
+        
 
     def on_navigation_start(self, event):
         self.audio_player.temporal_pause()
@@ -239,8 +241,7 @@ class AudioPlayerFrame(CTkFrame):
             elapsed_time = 0
 
         self.navigation_slider.set(float(elapsed_time) / audio_file.length * 100)
-        self.navigate(elapsed_time)
-        self.refresh_cursor_position(elapsed_time)
+        self.set_elapsed_time(elapsed_time)
 
         self.end_time_label.configure(text=to_timestamp_sec(audio_file.length)) 
         self.audio_info_textbox.configure(state='normal')

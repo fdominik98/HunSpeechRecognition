@@ -1,12 +1,20 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
+import whisper
+
+whisper_assets_path = os.path.join(os.path.dirname(whisper.__file__), 'assets')
+whisper_normalizers_path = os.path.join(os.path.dirname(whisper.__file__), 'normalizers')
+print(whisper_assets_path)
+print(whisper_normalizers_path)
+
 
 a = Analysis(
     ['../src/project_interface.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=['PIL', 'PIL._imagingtk', 'PIL._tkinter_finder'],
+    datas=[(whisper_assets_path, 'whisper/assets'), (whisper_normalizers_path, 'whisper/normalizers')],
+    hiddenimports=['PIL', 'whisper.normalizers', 'tiktoken', 'tiktoken_ext.openai_public', 'tiktoken_ext', 'PIL._imagingtk', 'PIL._tkinter_finder'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
