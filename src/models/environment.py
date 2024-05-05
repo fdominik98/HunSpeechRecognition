@@ -18,6 +18,8 @@ class Environment(YamlModel):
     last_project_dir: str = ''
     last_project_name: str = ''
     last_project_audio: str = ''
+    
+    recommended_model: str = ''
 
 
 def get_root_path() -> str:

@@ -39,7 +39,7 @@ class ResultManager(LoadableManager):
 
         with self._lock:
             self.__write_headers()
-            with open(self.__file_path, 'a', newline='', encoding='utf-8') as file:
+            with open(self.__file_path, 'a', newline='', encoding='utf8') as file:
                 writer = csv.DictWriter(
                     file, fieldnames=new_results[0].to_dict().keys())
                 writer.writerows([result.to_dict() for result in new_results])
@@ -48,7 +48,7 @@ class ResultManager(LoadableManager):
     def load(self):
         with self._lock:
             self.__write_headers()
-            with open(self.__file_path, mode='r', encoding='utf-8') as file:
+            with open(self.__file_path, mode='r', encoding='utf8') as file:
                 reader = csv.DictReader(file)
                 [self.__result_list.append(
                     ResultRow.from_dict(row)) for row in reader]
@@ -59,7 +59,7 @@ class ResultManager(LoadableManager):
         # If the file does not exist, create an empty file with headers
         headers = ['id', 'chunk_id', 'chunk_file', 'relative_timestamp',
                    'absolute_timestamp', 'sentence']  # Define your headers here
-        with open(self.__file_path, mode='w', newline='') as file:
+        with open(self.__file_path, mode='w', newline='', encoding='utf8') as file:
             writer = csv.DictWriter(file, fieldnames=headers)
             writer.writeheader()
 

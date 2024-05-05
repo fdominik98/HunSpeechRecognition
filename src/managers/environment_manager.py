@@ -1,27 +1,27 @@
 import os
 from threading import Lock
 from models.environment import Environment
-from models.environment import get_root_path, add_to_path, get_environment_file_path
+from models.environment import get_root_path, add_to_path, get_environment_file_path, get_environment_folder_path
 
 
 class EnvironmentManager():
     def __init__(self) -> None:
         self.__file_path = get_environment_file_path()
+        self.__folder_path = get_environment_folder_path()
         self.__lock = Lock()
         self.__load_environment()
 
     def __load_environment(self):
         with self.__lock:
-            if os.path.exists(self.__file_path):
-                self.__environment: Environment = Environment.parse_file(
-                    self.__file_path)
-            else:
+            if not os.path.exists(self.__folder_path):
+                os.makedirs(self.__folder_path)
+            if not os.path.exists(self.__file_path):     
                 self.__environment: Environment = Environment()
-                with open(self.__file_path, 'w') as file:
+                with open(self.__file_path, 'w', encoding='utf8') as file:
                     file.write(self.__environment.yaml())
-                raise Exception(
-                    'A környezeti változó függőségek nincsenek configurálva ([Telepitő mappa]/dependencies/environment.yaml)')
-
+            else:
+                self.__environment: Environment = Environment.parse_file(
+                        self.__file_path)
             root_path = get_root_path()
 
             add_to_path(self.__environment.cuda_path.replace(
@@ -49,7 +49,7 @@ class EnvironmentManager():
 
     def save_environment(self) -> None:
         with self.__lock:
-            with open(self.__file_path, 'w') as file:
+            with open(self.__file_path, 'w', encoding='utf8') as file:
                 file.write(self.__environment.yaml())
 
     def get_last_project_dir(self) -> str:
@@ -75,3 +75,11 @@ class EnvironmentManager():
     def set_last_project_audio(self, data: str):
         with self.__lock:
             self.__environment.last_project_audio = data
+            
+    def get_recommended_model(self) -> str:
+        with self.__lock:
+            return self.__environment.recommended_model
+
+    def set_recommended_model(self, data: str):
+        with self.__lock:
+            self.__environment.recommended_model = data

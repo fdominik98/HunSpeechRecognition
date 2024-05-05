@@ -3,7 +3,7 @@ import json
 import os
 from models.settings import Settings
 from models.task import Task
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 
 
 class AssetTreeManager():
@@ -20,7 +20,7 @@ class AssetTreeManager():
     def load(self):
         with self.__lock:
             if os.path.exists(self.asset_tree_file):
-                with open(self.asset_tree_file, 'r') as f:
+                with open(self.asset_tree_file, 'r', encoding='utf8') as f:
                     self.__compose_tasks(json.load(f))
                 return
             if not os.path.exists(self.split_folder):
@@ -28,7 +28,7 @@ class AssetTreeManager():
             if not os.path.exists(self.trim_folder):
                 os.makedirs(self.trim_folder)
             self.asset_tree = self.__calculate_tree_structure()
-            with open(self.asset_tree_file, 'w') as f:
+            with open(self.asset_tree_file, 'w', encoding='utf8') as f:
                 json.dump(self.asset_tree, f)
             self.__compose_tasks(self.asset_tree)
 

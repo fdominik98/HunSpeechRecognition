@@ -2,7 +2,7 @@ from copy import deepcopy
 from queue import Queue
 from typing import Optional
 from models.settings import Settings
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 from threads.audio_splitter_thread import AudioSplitterThread
 from threads.audio_trimmer_thread import AudioTrimmerThread
 from threads.pipeline_manager_thread import PipelineManagerThread

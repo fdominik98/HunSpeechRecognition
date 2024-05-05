@@ -63,13 +63,19 @@ def select_whisper_model_type_cpu():
 
     # Define thresholds for model selection
     ram_threshold_for_large = 16  # in GiB
-    cpu_core_threshold_for_large = 8  # in GiB
-    cpu_freq_threshold_for_large = 3
+    ram_threshold_for_med = 8
+    cpu_core_threshold_for_large = 6  # in GiB
+    cpu_core_threshold_for_med = 4  # in GiB
+    cpu_freq_threshold_for_large = 0
+    cpu_freq_threshold_for_med = 0
+    
 
     if cpu_cores >= cpu_core_threshold_for_large and total_ram_gb >= ram_threshold_for_large and cpu_freq >= cpu_freq_threshold_for_large:
         model = 'large'
-    else:
+    elif cpu_cores >= cpu_core_threshold_for_med and total_ram_gb >= ram_threshold_for_med and cpu_freq >= cpu_freq_threshold_for_med:
         model = 'medium'
+    else:
+        model = 'small'
 
     print(f"Based on your system's resources, the recommended Whisper model to use is: {model}")
     return model

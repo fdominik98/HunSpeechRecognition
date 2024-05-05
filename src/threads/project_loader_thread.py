@@ -41,7 +41,11 @@ class ProjectCreatorThread(ProjectLoaderThread):
         self.settings.project_audio_path = audio_converter.converted_audio_path
         self.settings.project_audio_duration = audio_converter.converted_audio_duration
         self.settings.project_audio_name = audio_converter.converted_audio_name
-        self.settings.project_name = self.project_name        
+        self.settings.project_name = self.project_name    
+          
+        self.settings.recommended_model = self.environment_manager.get_recommended_model()  
+        self.settings.chosen_model = self.environment_manager.get_recommended_model() 
+        
         asset_tree_manager = AssetTreeManager(settings=self.settings)
         asset_tree_manager.load()
         self.settings.chunk_count = asset_tree_manager.chunk_count()

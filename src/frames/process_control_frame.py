@@ -1,9 +1,10 @@
 from datetime import datetime
 from customtkinter import CTkFrame, CTkProgressBar, CTkButton, CTkLabel, CTkOptionMenu, NORMAL, DISABLED, StringVar
+from models.enums.model_type import ModelType, ModelTypeRecommended
 from utils.fonts import button_font, small_button_font, label_font
 from models.settings import Settings
 from managers.result_manager import ResultManager
-from models.process_state import ProcessState, non_trimming_options
+from models.enums.process_state import ProcessState, non_trimming_options
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager
 from utils.general_utils import to_timestamp_sec
 from models.progress_data import ProgressData
@@ -44,10 +45,19 @@ class ProcessControlFrame(CTkFrame):
         self.progress_time_label.grid(
             row=0, column=0, padx=(0, 0), pady=(10, 10), sticky='ens')
         self.progress_time_label.grid_remove()
+        
+        self.chosen_model = ModelTypeRecommended.from_value(settings.chosen_model) if settings.chosen_model == settings.recommended_model else ModelType.from_value(settings.chosen_model)
+        self.model_values = [str(ModelTypeRecommended.from_value(choice.value)) if choice.value == settings.recommended_model else str(choice) for choice in ModelType]
+                
+        self.model_menu = CTkOptionMenu(self, values=self.model_values,
+                                         font=small_button_font(), dropdown_font=small_button_font(), width=200, command=self.model_type_changed)
+        self.model_menu.grid(row=0, column=1, padx=(
+            15, 5), pady=(10, 10), sticky="sne")
+        self.model_menu.set(str(self.chosen_model))
 
         self.option_values = [
             str(choice) for choice in ProcessState if choice is not ProcessState.STOPPED]
-        self.option_menu = CTkOptionMenu(self, variable=StringVar(value=str(ProcessState.SPLITTING)), values=self.option_values,
+        self.option_menu = CTkOptionMenu(self, values=self.option_values,
                                          font=small_button_font(), dropdown_font=small_button_font(), width=200)
         self.option_menu.grid(row=0, column=2, padx=(
             15, 15), pady=(10, 10), sticky="sne")
@@ -67,7 +77,18 @@ class ProcessControlFrame(CTkFrame):
         self.grid_columnconfigure(1, weight=1)
 
         self.on_trim_switch_flipped(self.settings.trim_switch_var)
+        
+        if self.settings.recommended_model != self.settings.chosen_model:
+            self.__call_process_state_change_callbacks(ProcessState.TRANSCRIPTING, True)
+            
         self.update_progress()
+        
+    def model_type_changed(self, option):        
+        model_type = ModelType.from_label(option).value
+        if self.settings.chosen_model == model_type:
+            return
+        self.settings.chosen_model = model_type
+        self.__call_process_state_change_callbacks(ProcessState.TRANSCRIPTING, True)
 
     def switch_to_stop_mode(self):
         self.process_state = ProcessState.STOPPED
@@ -75,6 +96,7 @@ class ProcessControlFrame(CTkFrame):
         self.progress_label.grid_remove()
         self.progress_time_label.grid_remove()
         self.option_menu.configure(state=NORMAL)
+        self.model_menu.configure(state=NORMAL)
         self.stop_button.grid_remove()
         self.transcription_start_button.grid()
 
@@ -84,8 +106,7 @@ class ProcessControlFrame(CTkFrame):
             self.option_menu.configure(values=self.option_values)
         else:
             self.option_menu.configure(values=non_trimming_options)
-        self.option_menu.configure(variable=StringVar(
-            value=str(ProcessState.SPLITTING)))
+        self.option_menu.set(str(ProcessState.SPLITTING))
 
     def __on_cancel_process_click(self):
         old_process_state = self.process_state
@@ -139,5 +160,6 @@ class ProcessControlFrame(CTkFrame):
         self.progress_time_label.configure(text=to_timestamp_sec(0))
         self.progress_time_label.grid()
         self.option_menu.configure(state=DISABLED)
+        self.model_menu.configure(state=DISABLED)
         self.transcription_start_button.grid_remove()
         self.stop_button.grid()

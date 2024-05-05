@@ -14,12 +14,12 @@ class SettingsManager():
                 self.__settings = Settings.parse_file(self.__file_path)
                 return
             self.__settings = Settings()
-            with open(self.__file_path, 'w') as file:
+            with open(self.__file_path, 'w', encoding='utf8') as file:
                 file.write(self.__settings.yaml())
 
     def save_settings(self) -> None:
         with self.__lock:
-            with open(self.__file_path, 'w') as file:
+            with open(self.__file_path, 'w', encoding='utf8') as file:
                 file.write(self.__settings.yaml())
 
     def get(self) -> Settings:

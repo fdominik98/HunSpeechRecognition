@@ -19,13 +19,13 @@ class ModelInitState(Enum):
 
 
 class PipelineProcess(Process):
-    def __init__(self) -> None:
+    def __init__(self, model_type : str) -> None:
         self.download_parent_conn, self.download_child_conn = Pipe()
         self.init_parent_conn, self.init_child_conn = Pipe()
         self.input_queue: ProcessQueue = ProcessQueue()
         self.output_queue: ProcessQueue = ProcessQueue()
         super().__init__(target=do_process_file, name="Pipeline process", args=(
-            self.download_child_conn, self.init_child_conn, self.input_queue, self.output_queue), daemon=True)
+            self.download_child_conn, self.init_child_conn, self.input_queue, self.output_queue, model_type), daemon=True)
         self.download_child_conn.send(ModelInitState.CHECKING_FOR_MODEL)
 
     def terminate(self) -> None:
@@ -53,13 +53,11 @@ def download_model(download_conn, model_type, model_path):
     return model
 
 
-def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue):
-    from utils.model_loader import select_whisper_model_type_cpu, check_whisper_model
+def do_process_file(download_conn, init_conn, input_queue: ProcessQueue, output_queue: ProcessQueue, model_type : str):
+    from utils.model_loader import check_whisper_model
     
     num_producers = 1
     model_path = get_whisper_model_path()
-    model_type = select_whisper_model_type_cpu()
-    model_type = "large"
 
     if check_whisper_model(model_type, model_path):
         download_conn.send(ModelInitState.MODEL_FOUND)

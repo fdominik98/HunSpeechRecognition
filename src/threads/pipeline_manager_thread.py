@@ -26,9 +26,9 @@ class PipelineManagerThread(SpeechBaseThread):
 
     def do_run(self):
         while not self.stopped():
-            self.init_process()
-
             self.__reset_event.clear()
+            
+            self.init_process()
 
             while not self.stopped() and not self.reseted():
                 if not self.input_queue.empty():
@@ -46,10 +46,10 @@ class PipelineManagerThread(SpeechBaseThread):
         self.init_pipeline_queue.put(ModelInitState.INIT_STARTED)
 
         if not self.process.is_alive():
-            self.process = PipelineProcess()
+            self.process = PipelineProcess(self.settings.chosen_model)
             self.process.start()
 
-        while not self.stopped():
+        while not self.stopped() and not self.reseted():
             if self.process.init_parent_conn.poll() and self.process.init_parent_conn.recv() is ModelInitState.INIT_FINISHED:
                 self.init_pipeline_queue.put(ModelInitState.INIT_FINISHED)
                 break
@@ -57,6 +57,7 @@ class PipelineManagerThread(SpeechBaseThread):
 
     def reset(self):
         self.__reset_event.set()
+        print('pipeline reseted')
 
     def reseted(self):
         return self.__reset_event.is_set()

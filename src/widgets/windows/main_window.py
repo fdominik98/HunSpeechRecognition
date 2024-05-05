@@ -1,6 +1,6 @@
 from customtkinter import CTkFrame
 from models.settings import Settings
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 from frames.audio_player_frame import AudioPlayerFrame
 from frames.init_pipeline_frame import InitPipelineFrame
 from frames.audio_preview.audio_preview_frame import AudioPreviewFrame

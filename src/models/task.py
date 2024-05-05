@@ -1,4 +1,4 @@
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 
 
 class Task():

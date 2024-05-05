@@ -7,7 +7,7 @@ from managers.result_manager import ResultManager
 from managers.audio_file_manager import TrimmedAudioFileManager, SplitAudioFileManager
 from models.result_row import ResultRow
 from models.environment import get_images_path
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 from models.settings import Settings
 
 

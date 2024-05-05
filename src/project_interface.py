@@ -4,6 +4,7 @@ from multiprocessing import freeze_support
 from customtkinter import CTk, filedialog, CTkFrame, CTkTextbox, CTkLabel, CTkButton, CTkProgressBar, set_appearance_mode, set_default_color_theme, DISABLED, NORMAL
 from managers.settings_manager import SettingsManager
 from utils.general_utils import empty, get_text
+from utils.model_loader import select_whisper_model_type_cpu
 from utils.window_utils import open_message, center_window
 from utils.fonts import button_font, label_font
 from models.pipeline_process import PipelineProcess, ModelInitState
@@ -45,8 +46,9 @@ class ProjectInterface(CTk):
             self.environment_manager = None
             open_message(self, 'hiba', e)
             self.message_window.protocol("WM_DELETE_WINDOW", self.__on_closing)
-
-        self.pipeline_process = PipelineProcess()
+            
+        self.environment_manager.set_recommended_model(select_whisper_model_type_cpu())
+        self.pipeline_process = PipelineProcess(self.environment_manager.get_recommended_model())
         self.pipeline_process.start()
 
         self.protocol("WM_DELETE_WINDOW", self.__on_closing)

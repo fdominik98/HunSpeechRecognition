@@ -3,10 +3,11 @@ cuda_bin_path: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/bin
 cuda_libnvvp_path: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v12.4/libnvvp
 physx_path: C:/Program Files (x86)/NVIDIA Corporation/PhysX/Common
 nvdlisr_path: C:/Program Files/NVIDIA Corporation/NVIDIA NvDLISR
-cudnn_bin_path: '[INSTALL_DIR]/cudnn-windows-x86_64-8.9.6.50_cuda12-archive/bin'
+cudnn_bin_path: '[INSTALL_DIR]/cudnn-windows-x86_64-8.9.7.29_cuda11-archive/bin'
 cudnn_bin_path2: '[INSTALL_DIR]/_internal/torch/lib'
 ffmpeg_path: '[INSTALL_DIR]/deploy/ffmpeg-master-latest-win64-gpl/bin'
 ffmpeg_path2: '[INSTALL_DIR]/ffmpeg-master-latest-win64-gpl/bin'
-last_project_dir: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/dfgdg
-last_project_name: dfgdg
-last_project_audio: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/dfgdg/proba.wav
+last_project_dir: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/asdasd
+last_project_name: asdasd
+last_project_audio: C:/Users/freyd/Desktop/HunSpeechRecognition/testing/asdasd/proba.wav
+recommended_model: large

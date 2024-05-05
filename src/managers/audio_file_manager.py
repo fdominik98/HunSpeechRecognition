@@ -66,7 +66,7 @@ class AudioFileManager(LoadableManager, ABC):
     def load_file(file_path) -> Optional[AudioFile]:
         if AudioFileManager.exists(file_path):
             info_path = AudioFileManager.get_info_path(file_path)
-            with open(info_path, 'r') as f:
+            with open(info_path, 'r', encoding='utf8') as f:
                 general_data = json.load(f)
             return AudioFile(general_data["chunk_id"],
                              file_path,
@@ -80,7 +80,7 @@ class AudioFileManager(LoadableManager, ABC):
             data_to_store = {"chunk_id": audio_file.chunk_id,
                              "absolute_timestamp": audio_file.absolute_timestamp,
                              "is_place_holder": audio_file.is_place_holder}
-            with open(info_path, 'w') as f:
+            with open(info_path, 'w', encoding='utf8') as f:
                 json.dump(data_to_store, f)
             self._size += 1
 

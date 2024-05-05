@@ -4,7 +4,7 @@ from utils.fonts import label_font
 from models.environment import get_images_path
 from models.settings import Settings
 from managers.audio_file_manager import SplitAudioFileManager, TrimmedAudioFileManager, AudioFileManager
-from models.process_state import ProcessState
+from models.enums.process_state import ProcessState
 from widgets.interactive_textbox import AudioInteractiveTextbox
 from models.audio_file import AudioFile
 from frames.audio_preview.trim_settings_frame import TrimSettingsFrame

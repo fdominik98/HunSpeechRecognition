@@ -14,3 +14,6 @@ class Settings(YamlModel):
     trim_switch_var: bool = False
     player_volume: int = 50
     trim_dbfs_auto: bool = True
+    recommended_model: str = ''
+    chosen_model: str = ''
+
